@@ -34,7 +34,7 @@ def get_packages(package):
 setup(
     name='zipkin-asgi',
     version=get_version('zipkin_asgi'),
-    url='https://github.com/mchlvl/starlette-opentracing',
+    url='https://github.com/mchlvl/zipkin_asgi',
     license='BSD',
     description='Zipkin integration for ASGI frameworks.',
     long_description=get_long_description(),
