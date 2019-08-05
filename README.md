@@ -50,10 +50,6 @@ from middlewares.zipkingtracing import (
     ZipkinTracingMiddleware,
 )
 
-os.environ["ZIPKIN_AGENT_HOST"] = "localhost"
-os.environ["ZIPKIN_AGENT_PORT"] = "9411"
-os.environ["ZIPKIN_SERVICE_NAME"] = "MyService"
-
 
 routes = [
     Route("/", JSONResponse({"status": "OK"})),
@@ -67,7 +63,7 @@ if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info", reload=True)
 ```
 
-Where we use env variables `ZIPKIN_AGENT_HOST`, `ZIPKIN_AGENT_PORT` to point at host (in this context where Jaeger is deployed and listens).
+By default the agent emits to `http://localhost:9411`, can be controled via env variables `ZIPKIN_AGENT_HOST`, `ZIPKIN_AGENT_PORT`.
 
 All traffic is captured and available at [http://localhost:16686/](http://localhost:16686/)
 
