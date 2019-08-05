@@ -2,7 +2,7 @@
 
 - aiozipkin - async compatible zipkin library
 - Jaeger - collector/ui (here all-in-one)
-  - note - we don't use jaeger agent since it causes issues in python async implementation (see [#50](https://github.com/jaegertracing/jaeger-client-python/issues/50))
+  - note - we don't use jaeger client since it causes issues in python async implementation (see [#50](https://github.com/jaegertracing/jaeger-client-python/issues/50))
 
 Powered by ASGI Uvicorn and Starlette Framework
 
@@ -63,7 +63,7 @@ if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info", reload=True)
 ```
 
-By default the agent emits to `http://localhost:9411`, can be controled via env variables `ZIPKIN_AGENT_HOST`, `ZIPKIN_AGENT_PORT`.
+By default the client emits to `http://localhost:9411`, can be controled via env variables `ZIPKIN_AGENT_HOST`, `ZIPKIN_AGENT_PORT`.
 
 All traffic is captured and available at [http://localhost:16686/](http://localhost:16686/)
 
@@ -196,12 +196,13 @@ Both calls are collected by Jaeger and available in WebUI
 ## Environment variables
 
 - `ZIPKIN_AGENT_HOST = "localhost"`
-  - default local host, needs to be set to point at deployed service
+  - default local host, needs to be set to point at the agent that collects traces (e.g. jaeger-agent)
 - `ZIPKIN_AGENT_PORT = "9411"`
-  - default port, where jaeger also listens - no need to adjust
+  - default port, needs to be set to point at the agent that collects traces (e.g. jaeger-agent)
+  - 9411 is default for zipkin client/agent (and jaeger-agent)
   - make sure to make accessible
 - `ZIPKIN_SERVICE_NAME = "service_name"`
-  - default port, where jaeger also listens - no need to adjust
+  - name of the service
 - `ZIPKIN_SAMPLING_RATE = "1.0"`
   - zipkin sampling rate, default samples every call
 - `ZIPKIN_SAMPLED = "1"`
