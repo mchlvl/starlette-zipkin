@@ -1,34 +1,44 @@
+import asyncio
 import uvicorn
 from starlette.applications import Starlette
 from starlette.responses import JSONResponse
 from starlette.routing import Route
-from graphql.execution.executors.asyncio import AsyncioExecutor
 
-from api.settings import GRAPHQL_ROUTE, DEBUG
-from api.schema import schema
-from api.graphqlapp import GraphQLApp
-from api.middlewares.opentracing import (
-    OpenTracingMiddleware,
-    GrapheneOpenTracing,
+from middlewares.zipkingtracing import (
+    ZipkinTracingMiddleware,
+    get_root_span,
+    init_tracer,
 )
+
+
+async def homepage(request):
+    root_span = get_root_span()
+    tracer = await init_tracer()
+    await asyncio.sleep(1)
+
+    with tracer.new_child(root_span.context) as child_span:
+        child_span.name("NewParent")
+        child_span.tag("component", "second")
+        child_span.annotate(
+            "Child, sleeps for 1, injects headers and becomes parent"
+        )
+        await asyncio.sleep(1)
+
+        # ! if headers not explicitly provided,\
+        # root span from middleware injects headers
+        # and becomes the x-b3-spanid unde which new span is traced
+        headers = child_span.context.make_headers()
+        return JSONResponse({"hello": "world"}, headers=headers)
 
 
 routes = [
     Route("/", JSONResponse({"status": "OK"})),
-    Route(
-        GRAPHQL_ROUTE,
-        GraphQLApp(
-            schema=schema,
-            executor_class=AsyncioExecutor,
-            middleware=[GrapheneOpenTracing()],
-        ),
-    ),
+    Route("/homepage", homepage),
 ]
 
-app = Starlette(debug=DEBUG, routes=routes)
+app = Starlette(debug=True, routes=routes)
 
-app.add_middleware(OpenTracingMiddleware)
-
+app.add_middleware(ZipkinTracingMiddleware)
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info", reload=DEBUG)
+    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info", reload=True)
