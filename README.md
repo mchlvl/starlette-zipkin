@@ -2,7 +2,7 @@
 
 - aiozipkin - async compatible zipkin library
 - Jaeger - collector/ui (here all-in-one)
-  - note - we don't use jaeger agent since it causes issues in pytohn implementation in async (see [#50](https://github.com/jaegertracing/jaeger-client-python/issues/50))
+  - note - we don't use jaeger agent since it causes issues in python async implementation (see [#50](https://github.com/jaegertracing/jaeger-client-python/issues/50))
 
 Powered by ASGI Uvicorn and Starlette Framework
 
@@ -36,7 +36,7 @@ $ docker run -d --name jaeger \
 
 Trace queries at [http://localhost:16686/](http://localhost:16686/)
 
-### Inject middleware
+### Add middleware
 
 ```
 import asyncio

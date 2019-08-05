@@ -1,4 +1,3 @@
-import logging
 import os
 import aiozipkin as az
 import traceback
@@ -100,6 +99,9 @@ class ZipkinTracingMiddleware(BaseHTTPMiddleware):
             span.tag(tags.HTTP_URL, self.get_url(scope))
             span.tag("http.route", scope["path"])
             span.tag("http.headers", self.get_headers(scope))
+            # TODO: get body (need to check starlette if allows,
+            # in experimental testing calls hang forever, if body
+            # awaited before calling next)
 
     def after(self, span, response):
         # if context header not filled in by other function,
@@ -109,7 +111,6 @@ class ZipkinTracingMiddleware(BaseHTTPMiddleware):
             and ZIPKIN_INJECT_RESPONSE_HEADERS
         ):
             trace_headers = span.context.make_headers()
-            logging.info(trace_headers)
             response.headers.update(trace_headers)
         span.tag("http.status_code", response.status_code)
         span.tag("http.response.headers", dict(response.headers))
