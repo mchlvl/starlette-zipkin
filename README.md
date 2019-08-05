@@ -1,3 +1,5 @@
+> OLD - use the master branch to update the middleware. This old verison cannot follow up on traces from other services.
+
 # Intro
 
 Implementation of OpenTracing standard using
