@@ -19,6 +19,10 @@ ZIPKIN_SERVICE_NAME = os.getenv("ZIPKIN_SERVICE_NAME", "service_name")
 ZIPKIN_SAMPLING_RATE = float(os.getenv("ZIPKIN_SAMPLING_RATE", "1.0"))
 ZIPKIN_SAMPLED = os.getenv("ZIPKIN_SAMPLED", "1") == "1"
 ZIPKIN_ROOT_NAME = os.getenv("ZIPKIN_ROOT_NAME", "Request")
+ZIPKIN_INJECT_RESPONSE_HEADERS = (
+    os.getenv("ZIPKIN_INJECT_RESPONSE_HEADERS", "1") == "1"
+)
+ZIPKIN_FORCE_NEW_TRACE = os.getenv("ZIPKIN_FORCE_NEW_TRACE", "0") == "1"
 
 X_B3_TRACEID = "X-B3-TraceId"
 ROOT_SPAN_CTX_KEY = "root_span"
@@ -50,7 +54,7 @@ class ZipkinTracingMiddleware(BaseHTTPMiddleware):
 
         tracer = await init_tracer()
 
-        if self.has_trace_id(request):
+        if self.has_trace_id(request) and not ZIPKIN_FORCE_NEW_TRACE:
             kw = {"context": self.get_trace_context(request)}
             function = tracer.new_child
         else:
@@ -99,8 +103,11 @@ class ZipkinTracingMiddleware(BaseHTTPMiddleware):
 
     def after(self, span, response):
         # if context header not filled in by other function,
-        # add tracing info
-        if X_B3_TRACEID not in response.headers:
+        # add tracing info. Only if not surpressed by env
+        if (
+            X_B3_TRACEID not in response.headers
+            and ZIPKIN_INJECT_RESPONSE_HEADERS
+        ):
             trace_headers = span.context.make_headers()
             logging.info(trace_headers)
             response.headers.update(trace_headers)

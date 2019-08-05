@@ -6,6 +6,15 @@
 
 Powered by ASGI Uvicorn and Starlette Framework
 
+## Features
+- every call gets traced 
+    - (can be disabled, well, by not using the middleware)
+- every response injects trace IDs to response headers 
+    - (can be disabled via env variable)
+- possible to extract trace span inside other part of starlette application and follow up on the trace in any part of the trace resolution
+- every call starts a child tracer if incoming request already contains tracing information 
+    - (can be disabled via env variable)
+
 ## Quick start
 
 ### Run Jaeger all-in-one
@@ -201,3 +210,7 @@ Both calls are collected by Jaeger and available in WebUI
   - zipkin sampling rate, default samples every call
 - `ZIPKIN_SAMPLED = "1"`
   - zipkin sampled variable used for root middleware tracer, when no child coming from outside
+- `ZIPKIN_INJECT_RESPONSE_HEADERS = "1"`
+    - automatically inject response headers 
+- `ZIPKIN_FORCE_NEW_TRACE = "0"`
+    - if `"1"`, does not create child traces if incoming request contains tracing headers
