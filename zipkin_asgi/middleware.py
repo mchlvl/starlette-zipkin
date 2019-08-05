@@ -46,7 +46,7 @@ async def init_tracer(service_name=None):
     return tracer
 
 
-class ZipkinTracingMiddleware(BaseHTTPMiddleware):
+class ZipkinMiddleware(BaseHTTPMiddleware):
     async def dispatch(
         self, request: Request, call_next: RequestResponseEndpoint
     ):

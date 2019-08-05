@@ -4,8 +4,8 @@ from starlette.applications import Starlette
 from starlette.responses import JSONResponse
 from starlette.routing import Route
 
-from middlewares.zipkingtracing import (
-    ZipkinTracingMiddleware,
+from zipkin_asgi import (
+    ZipkinMiddleware,
     get_root_span,
     init_tracer,
 )
@@ -38,7 +38,7 @@ routes = [
 
 app = Starlette(debug=True, routes=routes)
 
-app.add_middleware(ZipkinTracingMiddleware)
+app.add_middleware(ZipkinMiddleware)
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info", reload=True)
