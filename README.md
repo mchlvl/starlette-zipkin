@@ -48,7 +48,7 @@ from starlette.applications import Starlette
 from starlette.responses import JSONResponse
 from starlette.routing import Route
 
-from middlewares.zipkingtracing import (
+from zipkin_asgi import (
     ZipkinTracingMiddleware,
 )
 
@@ -86,7 +86,7 @@ from starlette.applications import Starlette
 from starlette.responses import JSONResponse
 from starlette.routing import Route
 
-from middlewares.zipkingtracing import (
+from zipkin_asgi import (
     ZipkinTracingMiddleware,
     get_root_span,
     init_tracer,
