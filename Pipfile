@@ -4,7 +4,6 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
-black = "*"
 
 [packages]
 uvicorn = "*"
@@ -17,4 +16,4 @@ aiozipkin = "*"
 python_version = "3.7"
 
 [pipenv]
-allow_prereleases = true
+allow_prereleases = false
