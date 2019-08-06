@@ -35,9 +35,8 @@ def get_root_span() -> str:
     return _root_span_ctx_var.get()
 
 
-async def init_tracer(service_name=None):
-    service_name = service_name or ZIPKIN_SERVICE_NAME
-    endpoint = az.create_endpoint(service_name)
+async def init_tracer():
+    endpoint = az.create_endpoint(ZIPKIN_SERVICE_NAME)
     tracer = await az.create(
         f"http://{ZIPKIN_AGENT_HOST}:{ZIPKIN_AGENT_PORT}/api/v2/spans",
         endpoint,
