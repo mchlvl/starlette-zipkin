@@ -163,7 +163,7 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
 
     def get_query(self, scope):
         """
-        Extract querystring from the ASGI scope, in the format that the Sentry protocol expects.
+        Extract querystring from the ASGI scope.
         """
         return urllib.parse.unquote(scope["query_string"].decode("latin-1"))
 
