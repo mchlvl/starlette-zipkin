@@ -4,11 +4,7 @@ from starlette.applications import Starlette
 from starlette.responses import JSONResponse
 from starlette.routing import Route
 
-from zipkin_asgi import (
-    ZipkinMiddleware,
-    get_root_span,
-    init_tracer,
-)
+from zipkin_asgi import ZipkinMiddleware, get_root_span, init_tracer
 
 
 async def homepage(request):

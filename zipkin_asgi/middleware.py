@@ -1,6 +1,6 @@
-import os
 import aiozipkin as az
 import traceback
+import urllib
 from typing import Any
 from contextvars import ContextVar
 from urllib.parse import urlunparse
@@ -12,51 +12,59 @@ from starlette.middleware.base import (
 from starlette.requests import Request
 
 
-ZIPKIN_AGENT_HOST = os.getenv("ZIPKIN_AGENT_HOST", "localhost")
-ZIPKIN_AGENT_PORT = int(os.getenv("ZIPKIN_AGENT_PORT", "9411"))
-ZIPKIN_SERVICE_NAME = os.getenv("ZIPKIN_SERVICE_NAME", "service_name")
-ZIPKIN_SAMPLING_RATE = float(os.getenv("ZIPKIN_SAMPLING_RATE", "1.0"))
-ZIPKIN_SAMPLED = os.getenv("ZIPKIN_SAMPLED", "1") == "1"
-ZIPKIN_ROOT_NAME = os.getenv("ZIPKIN_ROOT_NAME", "Request")
-ZIPKIN_INJECT_RESPONSE_HEADERS = (
-    os.getenv("ZIPKIN_INJECT_RESPONSE_HEADERS", "1") == "1"
-)
-ZIPKIN_FORCE_NEW_TRACE = os.getenv("ZIPKIN_FORCE_NEW_TRACE", "0") == "1"
-
-X_B3_TRACEID = "X-B3-TraceId"
 ROOT_SPAN_CTX_KEY = "root_span"
+ZIPKIN_SERVICE_NAME_CTX_KEY = "zipkin_config"
+X_B3_TRACEID = "X-B3-TraceId"
+
 
 _root_span_ctx_var: ContextVar[Any] = ContextVar(
     ROOT_SPAN_CTX_KEY, default=None
 )
+_zipkin_config_ctx_var: ContextVar[Any] = ContextVar(
+    ZIPKIN_SERVICE_NAME_CTX_KEY, default=None
+)
 
 
-def get_root_span() -> str:
-    return _root_span_ctx_var.get()
-
-
-async def init_tracer():
-    endpoint = az.create_endpoint(ZIPKIN_SERVICE_NAME)
-    tracer = await az.create(
-        f"http://{ZIPKIN_AGENT_HOST}:{ZIPKIN_AGENT_PORT}/api/v2/spans",
-        endpoint,
-        sample_rate=ZIPKIN_SAMPLING_RATE,
-    )
-    return tracer
+class ZipkinConfig:
+    def __init__(
+        self,
+        host="localhost",
+        port=9411,
+        service_name="service_name",
+        sampling_rate=1.0,
+        sampled=True,
+        root_span_name="Request",
+        inject_response_headers=True,
+        force_new_trace=False,
+    ):
+        self.host = host
+        self.port = port
+        self.service_name = service_name
+        self.sampling_rate = sampling_rate
+        self.sampled = sampled
+        self.root_span_name = root_span_name
+        self.inject_response_headers = inject_response_headers
+        self.force_new_trace = force_new_trace
 
 
 class ZipkinMiddleware(BaseHTTPMiddleware):
+    def __init__(self, app, dispatch=None, config=None):
+        self.app = app
+        self.dispatch_func = self.dispatch if dispatch is None else dispatch
+        self.config = config or ZipkinConfig()
+        _zipkin_config_ctx_var.set(self.config)
+
     async def dispatch(
         self, request: Request, call_next: RequestResponseEndpoint
     ):
 
         tracer = await init_tracer()
 
-        if self.has_trace_id(request) and not ZIPKIN_FORCE_NEW_TRACE:
+        if self.has_trace_id(request) and not self.config.force_new_trace:
             kw = {"context": self.get_trace_context(request)}
             function = tracer.new_child
         else:
-            kw = {"sampled": ZIPKIN_SAMPLED}
+            kw = {"sampled": self.config.sampled}
             function = tracer.new_trace
 
         with function(**kw) as span:
@@ -89,7 +97,7 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
         return az.make_context(request.headers)
 
     def before(self, span, scope):
-        span.name(ZIPKIN_ROOT_NAME)
+        span.name(self.config.root_span_name)
         span.tag(tags.SPAN_KIND, "root")
         span.tag(tags.COMPONENT, "asgi")
         span.tag(tags.SPAN_KIND, tags.SPAN_KIND_RPC_SERVER)
@@ -98,16 +106,21 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
             span.tag(tags.HTTP_URL, self.get_url(scope))
             span.tag("http.route", scope["path"])
             span.tag("http.headers", self.get_headers(scope))
+            span.tag("query_string", self.get_query(scope))
             # TODO: get body (need to check starlette if allows,
             # in experimental testing calls hang forever, if body
             # awaited before calling next)
+        if scope.get("client"):
+            span.tag("remote_address", scope["client"][0])
+        if scope.get("endpoint"):
+            span.tag("transaction", self.get_transaction(scope))
 
     def after(self, span, response):
         # if context header not filled in by other function,
         # add tracing info. Only if not surpressed by env
         if (
             X_B3_TRACEID not in response.headers
-            and ZIPKIN_INJECT_RESPONSE_HEADERS
+            and self.config.inject_response_headers
         ):
             trace_headers = span.context.make_headers()
             response.headers.update(trace_headers)
@@ -128,13 +141,16 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
                 f"{host}:{port}",
                 scope["path"],
                 "",
-                scope["query_string"],
+                str(scope["query_string"]),
                 "",
             )
         )
         return url
 
     def get_headers(self, scope):
+        """
+        Extract headers from the ASGI scope.
+        """
         headers = {}
         for raw_key, raw_value in scope["headers"]:
             key = raw_key.decode("latin-1")
@@ -144,3 +160,41 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
             else:
                 headers[key] = value
         return headers
+
+    def get_query(self, scope):
+        """
+        Extract querystring from the ASGI scope, in the format that the Sentry protocol expects.
+        """
+        return urllib.parse.unquote(scope["query_string"].decode("latin-1"))
+
+    def get_transaction(self, scope):
+        """
+        Return a transaction string to identify the routed endpoint.
+        """
+        endpoint = scope["endpoint"]
+        qualname = (
+            getattr(endpoint, "__qualname__", None)
+            or getattr(endpoint, "__name__", None)
+            or None
+        )
+        if not qualname:
+            return None
+        return "%s.%s" % (endpoint.__module__, qualname)
+
+
+async def init_tracer():
+    endpoint = az.create_endpoint(get_config_value("service_name"))
+    tracer = await az.create(
+        f"http://{get_config_value('host')}:{get_config_value('port')}/api/v2/spans",
+        endpoint,
+        sample_rate=get_config_value("sampling_rate"),
+    )
+    return tracer
+
+
+def get_root_span() -> str:
+    return _root_span_ctx_var.get()
+
+
+def get_config_value(value: str) -> str:
+    return getattr(_zipkin_config_ctx_var.get(), value)

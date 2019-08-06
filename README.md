@@ -4,24 +4,25 @@
 
 # AioZipkin middleware
 
-- aiozipkin - async compatible zipkin library
-- Jaeger - collector/ui (here all-in-one)
-  - note - we don't use jaeger client since it causes issues in python async implementation (see [#50](https://github.com/jaegertracing/jaeger-client-python/issues/50))
+- Client
+    - aiozipkin - async compatible zipkin library
+- Server (any zipkin 2.0 compatible server will work)
+    - Jaeger
 
 Powered by ASGI Uvicorn and Starlette Framework
 
 ## Features
-- every call gets traced 
-    - (can be disabled, well, by not using the middleware)
-- every response injects trace IDs to response headers 
-    - (can be disabled via env variable)
+- every call gets traced
+- every response injects trace IDs to response headers
 - possible to extract trace span inside other part of starlette application and follow up on the trace in any part of the trace resolution
-- every call starts a child tracer if incoming request already contains tracing information 
-    - (can be disabled via env variable)
+- every call starts a child tracer if incoming request already contains tracing information
 
 ## Quick start
 
-### Run Jaeger all-in-one
+### Run tracing server 
+
+
+#### Jaeger all-in-one
 
 Follow instructions at [https://www.jaegertracing.io/docs/1.13/getting-started/](https://www.jaegertracing.io/docs/1.13/getting-started/)
 
@@ -35,25 +36,21 @@ $ docker run -d --name jaeger \
   -p 16686:16686 \
   -p 14268:14268 \
   -p 9411:9411 \
-  jaegertracing/all-in-one:1.8
+  jaegertracing/all-in-one:latest
 ```
 
 Trace queries at [http://localhost:16686/](http://localhost:16686/)
 
+
 ### Add middleware
 
 ```
-import asyncio
-import os
 import uvicorn
 from starlette.applications import Starlette
 from starlette.responses import JSONResponse
 from starlette.routing import Route
 
-from zipkin_asgi import (
-    ZipkinTracingMiddleware,
-)
-
+from zipkin_asgi import ZipkinMiddleware
 
 routes = [
     Route("/", JSONResponse({"status": "OK"})),
@@ -61,7 +58,7 @@ routes = [
 
 app = Starlette(debug=True, routes=routes)
 
-app.add_middleware(ZipkinTracingMiddleware)
+app.add_middleware(ZipkinMiddleware)
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info", reload=True)
@@ -82,17 +79,12 @@ Users can also nest spans inside the incoming requests using helper functions
 
 ```
 import asyncio
-import os
 import uvicorn
 from starlette.applications import Starlette
 from starlette.responses import JSONResponse
 from starlette.routing import Route
 
-from zipkin_asgi import (
-    ZipkinTracingMiddleware,
-    get_root_span,
-    init_tracer,
-)
+from zipkin_asgi import ZipkinMiddleware, get_root_span, init_tracer
 
 
 async def homepage(request):
@@ -110,7 +102,7 @@ async def homepage(request):
 
         # ! if headers not explicitly provided,\
         # root span from middleware injects headers
-        # and becomes the x-b3-spanid under which new span is traced
+        # and becomes the x-b3-spanid unde which new span is traced
         headers = child_span.context.make_headers()
         return JSONResponse({"hello": "world"}, headers=headers)
 
@@ -122,7 +114,7 @@ routes = [
 
 app = Starlette(debug=True, routes=routes)
 
-app.add_middleware(ZipkinTracingMiddleware)
+app.add_middleware(ZipkinMiddleware)
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info", reload=True)
@@ -197,21 +189,46 @@ Both calls are collected by Jaeger and available in WebUI
 
 ![](step_by_step.PNG)
 
-## Environment variables
+## Configuration
 
-- `ZIPKIN_AGENT_HOST = "localhost"`
+To change the middleware configuration, provide a config object (here with default values being as shown)
+
+```
+from zipkin_asgi import ZipkinMiddleware, ZipkinConfig
+
+config = ZipkinConfig(
+    host="localhost",
+    port=9411,
+    service_name="service_name",
+    sampling_rate=1.0,
+    sampled=True,
+    root_span_name="Request",
+    inject_response_headers=True,
+    force_new_trace=False,
+)
+
+app = Starlette()
+
+app.add_middleware(ZipkinMiddleware, config=config)
+```
+
+where:
+
+- `host = "localhost"`
   - default local host, needs to be set to point at the agent that collects traces (e.g. jaeger-agent)
-- `ZIPKIN_AGENT_PORT = "9411"`
+- `port = "9411"`
   - default port, needs to be set to point at the agent that collects traces (e.g. jaeger-agent)
   - 9411 is default for zipkin client/agent (and jaeger-agent)
   - make sure to make accessible
-- `ZIPKIN_SERVICE_NAME = "service_name"`
+- `service_name = "service_name"`
   - name of the service
-- `ZIPKIN_SAMPLING_RATE = "1.0"`
+- `sampling_rate = "1.0"`
   - zipkin sampling rate, default samples every call
-- `ZIPKIN_SAMPLED = "1"`
+- `sampled = True`
   - zipkin sampled variable used for root middleware tracer, when no child coming from outside
-- `ZIPKIN_INJECT_RESPONSE_HEADERS = "1"`
-    - automatically inject response headers 
-- `ZIPKIN_FORCE_NEW_TRACE = "0"`
-    - if `"1"`, does not create child traces if incoming request contains tracing headers
+- `root_span_name="Request"`
+  - default name of root span
+- `inject_response_headers = True`
+  - automatically inject response headers
+- `force_new_trace = False`
+  - if `True`, does not create child traces if incoming request contains tracing headers

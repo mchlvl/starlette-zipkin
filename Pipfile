@@ -5,12 +5,11 @@ verify_ssl = true
 
 [dev-packages]
 twine = "*"
-
-[packages]
 uvicorn = "*"
 starlette = "*"
-graphene = "*"
-jaeger-client = "*"
+pytest = "*"
+
+[packages]
 aiozipkin = "*"
 
 [requires]

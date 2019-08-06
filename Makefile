@@ -18,6 +18,8 @@ build: requirements
 publish: build
 	pipenv run twine upload dist/*
 
+tests:
+	pipenv run python -m pytest
 
 .DEFAULT_GOAL := show-help
 
