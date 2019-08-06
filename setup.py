@@ -6,6 +6,9 @@ import re
 
 from setuptools import setup
 
+with open("requirements.txt") as f:
+    requirements = f.read().splitlines()
+
 
 def get_version(package):
     """
@@ -42,7 +45,7 @@ setup(
     author='Michal Vala',
     author_email='mic.vala@gmail.com',
     packages=get_packages('zipkin_asgi'),
-    install_requires=['zipkin-sdk'],
+    install_requires=requirements,
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Environment :: Web Environment',

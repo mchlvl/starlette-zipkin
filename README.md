@@ -1,5 +1,7 @@
 > TODO: test coverage
 
+> Using [sentry-asgi](https://github.com/encode/sentry-asgi) as a boilerplate
+
 # AioZipkin middleware
 
 - aiozipkin - async compatible zipkin library
