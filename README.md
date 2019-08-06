@@ -23,7 +23,7 @@ Powered by ASGI Uvicorn and Starlette Framework
 
 ### Run Jaeger all-in-one
 
-Follow instructions at [https://www.jaegertracing.io/docs/1.8/getting-started/](https://www.jaegertracing.io/docs/1.8/getting-started/)
+Follow instructions at [https://www.jaegertracing.io/docs/1.13/getting-started/](https://www.jaegertracing.io/docs/1.13/getting-started/)
 
 ```
 $ docker run -d --name jaeger \
@@ -110,7 +110,7 @@ async def homepage(request):
 
         # ! if headers not explicitly provided,\
         # root span from middleware injects headers
-        # and becomes the x-b3-spanid unde which new span is traced
+        # and becomes the x-b3-spanid under which new span is traced
         headers = child_span.context.make_headers()
         return JSONResponse({"hello": "world"}, headers=headers)
 
