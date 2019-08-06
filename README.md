@@ -1,4 +1,4 @@
-> OLD - use the master branch to update the middleware. This old verison cannot follow up on traces from other services.
+> integrating graphene resolver tracing using zipkin (follows up on zipkin_asgi middleware)
 
 # Intro
 
