@@ -7,10 +7,8 @@ from graphql.execution.executors.asyncio import AsyncioExecutor
 from api.settings import GRAPHQL_ROUTE, DEBUG
 from api.schema import schema
 from api.graphqlapp import GraphQLApp
-from api.middlewares.opentracing import (
-    OpenTracingMiddleware,
-    GrapheneOpenTracing,
-)
+from api.middlewares.graphene import GrapheneZipkinMiddleware
+from api.middlewares.zipkin import ZipkinMiddleware
 
 
 routes = [
@@ -20,14 +18,14 @@ routes = [
         GraphQLApp(
             schema=schema,
             executor_class=AsyncioExecutor,
-            middleware=[GrapheneOpenTracing()],
+            middleware=[GrapheneZipkinMiddleware()],
         ),
     ),
 ]
 
 app = Starlette(debug=DEBUG, routes=routes)
 
-app.add_middleware(OpenTracingMiddleware)
+app.add_middleware(ZipkinMiddleware)
 
 
 if __name__ == "__main__":
