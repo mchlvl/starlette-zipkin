@@ -216,13 +216,13 @@ where:
 
 - `host = "localhost"`
   - default local host, needs to be set to point at the agent that collects traces (e.g. jaeger-agent)
-- `port = "9411"`
+- `port = 9411`
   - default port, needs to be set to point at the agent that collects traces (e.g. jaeger-agent)
   - 9411 is default for zipkin client/agent (and jaeger-agent)
   - make sure to make accessible
 - `service_name = "service_name"`
   - name of the service
-- `sampling_rate = "1.0"`
+- `sampling_rate = 1.0`
   - zipkin sampling rate, default samples every call
 - `sampled = True`
   - zipkin sampled variable used for root middleware tracer, when no child coming from outside
