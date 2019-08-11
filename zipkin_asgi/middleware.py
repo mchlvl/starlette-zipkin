@@ -13,7 +13,7 @@ from starlette.requests import Request
 
 
 ROOT_SPAN_CTX_KEY = "root_span"
-ZIPKIN_SERVICE_NAME_CTX_KEY = "zipkin_config"
+ZIPKIN_CONFIG_CTX_KEY = "zipkin_config"
 X_B3_TRACEID = "X-B3-TraceId"
 
 
@@ -21,7 +21,7 @@ _root_span_ctx_var: ContextVar[Any] = ContextVar(
     ROOT_SPAN_CTX_KEY, default=None
 )
 _zipkin_config_ctx_var: ContextVar[Any] = ContextVar(
-    ZIPKIN_SERVICE_NAME_CTX_KEY, default=None
+    ZIPKIN_CONFIG_CTX_KEY, default=None
 )
 
 
@@ -110,14 +110,17 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
             # TODO: get body (need to check starlette if allows,
             # in experimental testing calls hang forever, if body
             # awaited before calling next)
+            # https://github.com/encode/starlette/issues/495
         if scope.get("client"):
             span.tag("remote_address", scope["client"][0])
         if scope.get("endpoint"):
             span.tag("transaction", self.get_transaction(scope))
 
     def after(self, span, response):
-        # if context header not filled in by other function,
-        # add tracing info. Only if not surpressed by env
+        """
+        If context header not filled in by other function,
+        add tracing info.
+        """
         if (
             X_B3_TRACEID not in response.headers
             and self.config.inject_response_headers

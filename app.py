@@ -10,7 +10,6 @@ from zipkin_asgi import ZipkinMiddleware, get_root_span, init_tracer
 async def homepage(request):
     root_span = get_root_span()
     tracer = await init_tracer()
-    await asyncio.sleep(1)
 
     with tracer.new_child(root_span.context) as child_span:
         child_span.name("NewParent")

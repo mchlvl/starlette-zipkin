@@ -1,4 +1,4 @@
-> TODO: test coverage
+> TODO: test coverage, ci, release
 
 > Using [sentry-asgi](https://github.com/encode/sentry-asgi) as a boilerplate
 
@@ -12,10 +12,10 @@
 Powered by ASGI Uvicorn and Starlette Framework
 
 ## Features
-- every call gets traced
-- every response injects trace IDs to response headers
-- possible to extract trace span inside other part of starlette application and follow up on the trace in any part of the trace resolution
-- every call starts a child tracer if incoming request already contains tracing information
+- middleware tracing http traffic
+- injecting tracing headers to responses
+- extracting tracing headers from requests
+- context variable with the span for every incoming request - possible to instrument tracing of lower level operations
 
 ## Quick start
 
@@ -64,7 +64,7 @@ if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info", reload=True)
 ```
 
-By default the client emits to `http://localhost:9411`, can be controled via env variables `ZIPKIN_AGENT_HOST`, `ZIPKIN_AGENT_PORT`.
+By default the client emits to `http://localhost:9411`.
 
 All traffic is captured and available at [http://localhost:16686/](http://localhost:16686/)
 
@@ -72,9 +72,9 @@ All traffic is captured and available at [http://localhost:16686/](http://localh
 
 ## Advanced Tutorial
 
-Users can also nest spans inside the incoming requests using helper functions
+To instrument tracing at lower levels, two helper functions are available:
 
-- `get_root_span` - extract span context variable
+- `get_root_span` - returns the span object of the current request
 - `init_tracer` - tracer object initiator
 
 ```
