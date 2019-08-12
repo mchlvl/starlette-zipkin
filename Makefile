@@ -1,4 +1,4 @@
-.PHONY: run requirements install requirements build publish
+.PHONY: run requirements install requirements build publish tests
 .EXPORT_ALL_VARIABLES: 
 PIPENV_VENV_IN_PROJECT=1
 
@@ -30,3 +30,4 @@ show-help:
 	@echo "  requirements  creates requirements.txt from venv"
 	@echo "  build         requirements & python setup.py sdist"
 	@echo "  publish       build & twine upload dist/*"
+	@echo "  tests         run tests from tests/*"
