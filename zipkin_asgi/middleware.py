@@ -198,9 +198,9 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
         return "%s.%s" % (endpoint.__module__, qualname)
 
 
-def get_root_span() -> str:
+def get_root_span() -> Any:
     return _root_span_ctx_var.get()
 
 
-def get_tracer() -> str:
+def get_tracer() -> Any:
     return _tracer_ctx_var.get()
