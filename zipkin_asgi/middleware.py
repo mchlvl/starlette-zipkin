@@ -5,7 +5,6 @@ import urllib
 from typing import Any
 from contextvars import ContextVar
 from urllib.parse import urlunparse
-from opentracing.ext import tags
 from starlette.middleware.base import (
     BaseHTTPMiddleware,
     RequestResponseEndpoint,
@@ -113,12 +112,11 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
     def before(self, span, scope):
         name = f'{scope["scheme"].upper()} {scope["method"]} {scope["path"]}'
         span.name(name)
-        span.tag(tags.SPAN_KIND, "root")
-        span.tag(tags.COMPONENT, "asgi")
-        span.tag(tags.SPAN_KIND, tags.SPAN_KIND_RPC_SERVER)
+        span.tag("component", "asgi")
+        span.tag("span.kind", "server")
         if scope["type"] in {"http", "websocket"}:
-            span.tag(tags.HTTP_METHOD, scope["method"])
-            span.tag(tags.HTTP_URL, self.get_url(scope))
+            span.tag("http.method", scope["method"])
+            span.tag("http.url", self.get_url(scope))
             span.tag("http.route", scope["path"])
             span.tag("http.headers", self.get_headers(scope))
         query = self.get_query(scope)
