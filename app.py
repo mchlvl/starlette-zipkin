@@ -5,7 +5,7 @@ from starlette.applications import Starlette
 from starlette.responses import JSONResponse
 from starlette.routing import Route
 
-from zipkin_asgi import (
+from starlette_zipkin import (
     ZipkinMiddleware,
     ZipkinConfig,
     get_root_span,

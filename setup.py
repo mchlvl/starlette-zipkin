@@ -35,16 +35,16 @@ def get_packages(package):
 
 
 setup(
-    name='zipkin-asgi',
-    version=get_version('zipkin_asgi'),
-    url='https://github.com/mchlvl/zipkin_asgi',
+    name='starlette-zipkin',
+    version=get_version('starlette_zipkin'),
+    url='https://github.com/mchlvl/starlette_zipkin',
     license='BSD',
     description='Zipkin integration for ASGI frameworks.',
     long_description=get_long_description(),
     long_description_content_type='text/markdown',
     author='Michal Vala',
     author_email='mic.vala@gmail.com',
-    packages=get_packages('zipkin_asgi'),
+    packages=get_packages('starlette_zipkin'),
     install_requires=requirements,
     classifiers=[
         'Development Status :: 3 - Alpha',

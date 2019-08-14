@@ -2,14 +2,12 @@
 
 > Using [sentry-asgi](https://github.com/encode/sentry-asgi) as a boilerplate
 
-# AioZipkin middleware
+# AioZipkin middleware for Starlette
 
 - Client
     - aiozipkin - async compatible zipkin library
 - Server (any zipkin 2.0 compatible server will work)
     - Jaeger
-
-Powered by ASGI Uvicorn and Starlette Framework
 
 ## Features
 - middleware tracing http traffic
@@ -50,7 +48,7 @@ from starlette.applications import Starlette
 from starlette.responses import JSONResponse
 from starlette.routing import Route
 
-from zipkin_asgi import ZipkinMiddleware
+from starlette_zipkin import ZipkinMiddleware
 
 routes = [
     Route("/", JSONResponse({"status": "OK"})),
@@ -85,7 +83,7 @@ from starlette.applications import Starlette
 from starlette.responses import JSONResponse
 from starlette.routing import Route
 
-from zipkin_asgi import (
+from starlette_zipkin import (
     ZipkinMiddleware,
     ZipkinConfig,
     get_root_span,
@@ -206,7 +204,7 @@ Both calls are collected by Jaeger and available in WebUI
 To change the middleware configuration, provide a config object (here with default values being as shown)
 
 ```
-from zipkin_asgi import ZipkinMiddleware, ZipkinConfig
+from starlette_zipkin import ZipkinMiddleware, ZipkinConfig
 
 config = ZipkinConfig(
     host="localhost",
