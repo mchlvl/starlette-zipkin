@@ -1,5 +1,5 @@
 from starlette.testclient import TestClient
-from zipkin_asgi import ZipkinMiddleware, ZipkinConfig
+from starlette_zipkin import ZipkinMiddleware, ZipkinConfig
 
 
 def test_sync_no_inject(app, x_b_keys):

@@ -1,5 +1,5 @@
 from starlette.testclient import TestClient
-from zipkin_asgi import ZipkinMiddleware
+from starlette_zipkin import ZipkinMiddleware
 
 
 def test_sync_request_data(app, x_b_keys):

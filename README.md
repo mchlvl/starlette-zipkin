@@ -204,6 +204,7 @@ Both calls are collected by Jaeger and available in WebUI
 To change the middleware configuration, provide a config object (here with default values being as shown)
 
 ```
+import json
 from starlette_zipkin import ZipkinMiddleware, ZipkinConfig
 
 config = ZipkinConfig(
@@ -211,9 +212,9 @@ config = ZipkinConfig(
     port=9411,
     service_name="service_name",
     sampling_rate=1.0,
-    root_span_name="Request",
     inject_response_headers=True,
     force_new_trace=False,
+    json_encoder=json.dumps
 )
 
 app = Starlette()
@@ -233,9 +234,9 @@ where:
   - name of the service
 - `sampling_rate = 1.0`
   - zipkin sampling rate, default samples every call
-- `root_span_name="Request"`
-  - default name of root span
 - `inject_response_headers = True`
   - automatically inject response headers
 - `force_new_trace = False`
   - if `True`, does not create child traces if incoming request contains tracing headers
+- `json_encoder=json.dumps`
+  - json encoder can be provided, defaults to json dumps. It is used to format dictionaries for Jaeger UI.

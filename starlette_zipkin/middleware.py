@@ -71,12 +71,12 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
                 self.after(span, response)
                 # getting body after request was evaluated due to:
                 # https://github.com/encode/starlette/issues/495
-                body = await request.body()
-                if body:
-                    span.tag(
-                        "http.body",
-                        self.config.json_encoder(await request.json()),
-                    )
+                # body = await request.body()
+                # if body:
+                #     span.tag(
+                #         "http.body",
+                #         self.config.json_encoder(await request.json()),
+                #     )
                 return response
 
             except Exception as error:
@@ -147,7 +147,7 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
     def error(self, span, error):
         span.tag("error", True)
         span.tag("error.object", type(error).__name__)
-        span.tag("stack", traceback.format_exc())
+        span.tag("error.stack", traceback.format_exc())
 
     def get_url(self, scope):
         host, port = scope["server"]
