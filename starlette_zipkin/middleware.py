@@ -10,6 +10,7 @@ from starlette.middleware.base import (
     RequestResponseEndpoint,
 )
 from starlette.requests import Request
+from .header_formatters import B3Headers
 
 
 X_B3_TRACEID = "X-B3-TraceId"
@@ -40,22 +41,27 @@ class ZipkinConfig:
 
 
 class ZipkinMiddleware(BaseHTTPMiddleware):
-    def __init__(self, app, dispatch=None, config=None):
+    def __init__(
+        self, app, dispatch=None, config=None, header_formatter=B3Headers
+    ):
         self.app = app
         self.dispatch_func = self.dispatch if dispatch is None else dispatch
         self.config = config or ZipkinConfig()
         self.validate_config()
         self.tracer = None
+        self.header_formatter = header_formatter()
 
     async def dispatch(
         self, request: Request, call_next: RequestResponseEndpoint
     ):
-
+        print("REQUEST", request)
         await self.init_tracer()
         tracer = get_tracer()
 
         if self.has_trace_id(request) and not self.config.force_new_trace:
-            kw = {"context": az.make_context(request.headers)}
+            kw = {
+                "context": self.header_formatter.make_context(request.headers)
+            }
             function = tracer.new_child
         else:
             kw = {}
@@ -69,14 +75,7 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
                 self.before(span, request.scope)
                 response = await call_next(request)
                 self.after(span, response)
-                # getting body after request was evaluated due to:
-                # https://github.com/encode/starlette/issues/495
-                # body = await request.body()
-                # if body:
-                #     span.tag(
-                #         "http.body",
-                #         self.config.json_encoder(await request.json()),
-                #     )
+
                 return response
 
             except Exception as error:
@@ -89,22 +88,24 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
         await tracer.close()
 
     async def init_tracer(self):
-        endpoint = az.create_endpoint(self.config.service_name)
-        tracer = await az.create(
-            f"http://{self.config.host}:{self.config.port}/api/v2/spans",
-            endpoint,
-            sample_rate=self.config.sampling_rate,
-        )
-        self.tracer = tracer
-        _tracer_ctx_var.set(tracer)
+        if self.tracer is None:
+            endpoint = az.create_endpoint(self.config.service_name)
+            tracer = await az.create(
+                f"http://{self.config.host}:{self.config.port}/api/v2/spans",
+                endpoint,
+                sample_rate=self.config.sampling_rate,
+            )
+            self.tracer = tracer
+            _tracer_ctx_var.set(tracer)
+        else:
+            _tracer_ctx_var.set(self.tracer)
 
     def validate_config(self):
         if not isinstance(self.config, ZipkinConfig):
             raise ValueError("Config needs to be ZipkinConfig instance")
 
     def has_trace_id(self, request):
-        # TODO: uber-id conversion
-        if X_B3_TRACEID in request.headers:
+        if self.header_formatter.TRACE_ID_HEADER in request.headers:
             return True
         else:
             return False
@@ -132,17 +133,31 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
         If context header not filled in by other function,
         add tracing info.
         """
-        if (
-            X_B3_TRACEID not in response.headers
-            and self.config.inject_response_headers
-        ):
+        response_headers = response.headers
+        print("response_headers_orig", id(response_headers), response_headers)
+        if self.config.inject_response_headers:
+            # trace_headers = self.header_formatter.make_headers(
+            #     span.context, response.headers
+            # )
+            # response.headers.update(trace_headers)
             trace_headers = span.context.make_headers()
+            print("trace_headers", trace_headers)
+
             response.headers.update(trace_headers)
+            print("response_headers", response.headers)
         span.tag("http.status_code", response.status_code)
         span.tag(
             "http.response.headers",
             self.config.json_encoder(dict(response.headers)),
         )
+        # getting body after request was evaluated due to:
+        # https://github.com/encode/starlette/issues/495
+        # body = await request.body()
+        # if body:
+        #     span.tag(
+        #         "http.body",
+        #         self.config.json_encoder(await request.json()),
+        #     )
 
     def error(self, span, error):
         span.tag("error", True)
@@ -195,7 +210,7 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
         )
         if not qualname:
             return None
-        return "%s.%s" % (endpoint.__module__, qualname)
+        return f"{endpoint.__module__}.{qualname}"
 
 
 def get_root_span() -> Any:
