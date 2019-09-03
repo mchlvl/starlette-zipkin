@@ -13,9 +13,6 @@ from starlette.requests import Request
 from .header_formatters import B3Headers
 
 
-X_B3_TRACEID = "X-B3-TraceId"
-
-
 _root_span_ctx_var: ContextVar[Any] = ContextVar("root_span", default=None)
 _tracer_ctx_var: ContextVar[Any] = ContextVar("tracer", default=None)
 
@@ -133,7 +130,6 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
         If context header not filled in by other function,
         add tracing info.
         """
-        # update headers
         if self.config.inject_response_headers:
             self.config.header_formatter.update_headers(span, response)
 
