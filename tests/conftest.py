@@ -1,11 +1,17 @@
 import pytest
 from starlette.applications import Starlette
 from starlette.responses import PlainTextResponse
+from starlette_zipkin import B3Headers, UberHeaders
 
 
 @pytest.fixture
-def x_b_keys():
-    return ["x-b3-traceid", "x-b3-spanid", "x-b3-flags", "x-b3-sampled"]
+def b3_keys():
+    return B3Headers.KEYS
+
+
+@pytest.fixture
+def uber_keys():
+    return UberHeaders.KEYS
 
 
 @pytest.fixture

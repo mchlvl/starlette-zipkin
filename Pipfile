@@ -11,7 +11,7 @@ pytest = "*"
 
 [packages]
 aiozipkin = "*"
-starlette = "==0.12.8"
+starlette = "*"
 
 [requires]
 python_version = "3.7"

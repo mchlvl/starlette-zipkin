@@ -1,4 +1,4 @@
 from .b3 import B3Headers
-from .uber import UberTraceId
+from .uber import UberHeaders
 
-__all__ = ["B3Headers", "UberTraceId"]
+__all__ = ["B3Headers", "UberHeaders"]

@@ -30,6 +30,7 @@ class ZipkinConfig:
         inject_response_headers=True,
         force_new_trace=False,
         json_encoder=json.dumps,
+        header_formatter=B3Headers,
     ):
         self.host = host
         self.port = port
@@ -38,29 +39,28 @@ class ZipkinConfig:
         self.inject_response_headers = inject_response_headers
         self.force_new_trace = force_new_trace
         self.json_encoder = json_encoder
+        self.header_formatter = header_formatter()
 
 
 class ZipkinMiddleware(BaseHTTPMiddleware):
-    def __init__(
-        self, app, dispatch=None, config=None, header_formatter=B3Headers
-    ):
+    def __init__(self, app, dispatch=None, config=None):
         self.app = app
         self.dispatch_func = self.dispatch if dispatch is None else dispatch
         self.config = config or ZipkinConfig()
         self.validate_config()
         self.tracer = None
-        self.header_formatter = header_formatter()
 
     async def dispatch(
         self, request: Request, call_next: RequestResponseEndpoint
     ):
-        print("REQUEST", request)
         await self.init_tracer()
         tracer = get_tracer()
 
         if self.has_trace_id(request) and not self.config.force_new_trace:
             kw = {
-                "context": self.header_formatter.make_context(request.headers)
+                "context": self.config.header_formatter.make_context(
+                    request.headers
+                )
             }
             function = tracer.new_child
         else:
@@ -105,7 +105,7 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
             raise ValueError("Config needs to be ZipkinConfig instance")
 
     def has_trace_id(self, request):
-        if self.header_formatter.TRACE_ID_HEADER in request.headers:
+        if self.config.header_formatter.TRACE_ID_HEADER in request.headers:
             return True
         else:
             return False
@@ -133,18 +133,10 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
         If context header not filled in by other function,
         add tracing info.
         """
-        response_headers = response.headers
-        print("response_headers_orig", id(response_headers), response_headers)
+        # update headers
         if self.config.inject_response_headers:
-            # trace_headers = self.header_formatter.make_headers(
-            #     span.context, response.headers
-            # )
-            # response.headers.update(trace_headers)
-            trace_headers = span.context.make_headers()
-            print("trace_headers", trace_headers)
+            self.config.header_formatter.update_headers(span, response)
 
-            response.headers.update(trace_headers)
-            print("response_headers", response.headers)
         span.tag("http.status_code", response.status_code)
         span.tag(
             "http.response.headers",
