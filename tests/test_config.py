@@ -2,32 +2,32 @@ from starlette.testclient import TestClient
 from starlette_zipkin import ZipkinMiddleware, ZipkinConfig
 
 
-def test_sync_no_inject(app, x_b_keys):
+def test_sync_no_inject(app, b3_keys):
     config = ZipkinConfig(inject_response_headers=False)
     app.add_middleware(ZipkinMiddleware, config=config)
     client = TestClient(app)
     response = client.get("/sync-message?foo=bar")
     assert response.status_code == 200
-    assert not any(key in response.headers for key in x_b_keys)
+    assert not any(key in response.headers for key in b3_keys)
 
 
-def test_async_no_inject(app, x_b_keys):
+def test_async_no_inject(app, b3_keys):
     config = ZipkinConfig(inject_response_headers=False)
     app.add_middleware(ZipkinMiddleware, config=config)
     client = TestClient(app)
     response = client.get("/async-message?foo=bar")
     assert response.status_code == 200
-    assert not any(key in response.headers for key in x_b_keys)
+    assert not any(key in response.headers for key in b3_keys)
 
 
-def test_sync_force_new_trace(app, x_b_keys):
+def test_sync_force_new_trace(app, b3_keys):
     config = ZipkinConfig(force_new_trace=True)
     app.add_middleware(ZipkinMiddleware, config=config)
     client = TestClient(app)
     response = client.get("/sync-message?foo=bar")
     # call with injected tracing headers - needs to follow up
     headers = {}
-    for key in x_b_keys:
+    for key in b3_keys:
         headers[key] = response.headers[key]
     response2 = client.get("/sync-message?foo=bar", headers=headers)
     assert response2.status_code == 200
@@ -35,7 +35,7 @@ def test_sync_force_new_trace(app, x_b_keys):
     assert headers["x-b3-traceid"] != response2.headers["x-b3-traceid"]
 
 
-def test_async_force_new_trace(app, x_b_keys):
+def test_async_force_new_trace(app, b3_keys):
     config = ZipkinConfig(force_new_trace=True)
     app.add_middleware(ZipkinMiddleware, config=config)
     client = TestClient(app)
@@ -43,7 +43,7 @@ def test_async_force_new_trace(app, x_b_keys):
     assert response.status_code == 200
     # call with injected tracing headers - needs to follow up
     headers = {}
-    for key in x_b_keys:
+    for key in b3_keys:
         headers[key] = response.headers[key]
     response2 = client.get("/async-message?foo=bar", headers=headers)
     assert response2.status_code == 200

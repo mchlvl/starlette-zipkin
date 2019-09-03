@@ -88,6 +88,8 @@ from starlette_zipkin import (
     ZipkinConfig,
     get_root_span,
     get_tracer,
+    B3Headers,
+    UberHeaders
 )
 
 
@@ -123,6 +125,7 @@ config = ZipkinConfig(
     inject_response_headers=True,
     force_new_trace=False,
     json_encoder=json.dumps,
+    header_formatter=B3Headers
 )
 app.add_middleware(ZipkinMiddleware, config=config)
 
@@ -205,7 +208,7 @@ To change the middleware configuration, provide a config object (here with defau
 
 ```
 import json
-from starlette_zipkin import ZipkinMiddleware, ZipkinConfig
+from starlette_zipkin import ZipkinMiddleware, ZipkinConfig, B3Headers
 
 config = ZipkinConfig(
     host="localhost",
@@ -214,7 +217,8 @@ config = ZipkinConfig(
     sampling_rate=1.0,
     inject_response_headers=True,
     force_new_trace=False,
-    json_encoder=json.dumps
+    json_encoder=json.dumps,
+    header_formatter=B3Headers
 )
 
 app = Starlette()
@@ -240,3 +244,5 @@ where:
   - if `True`, does not create child traces if incoming request contains tracing headers
 - `json_encoder=json.dumps`
   - json encoder can be provided, defaults to json dumps. It is used to format dictionaries for Jaeger UI.
+- `header_formatter=B3Headers` 
+  - defaults to b3 headers format. Can be switched to UberHeaders, which imply the `uber-trace-id` format.

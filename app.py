@@ -8,6 +8,8 @@ from starlette.routing import Route
 from starlette_zipkin import (
     ZipkinMiddleware,
     ZipkinConfig,
+    UberHeaders,
+    B3Headers,
     get_root_span,
     get_tracer,
 )
@@ -45,6 +47,7 @@ config = ZipkinConfig(
     inject_response_headers=True,
     force_new_trace=False,
     json_encoder=json.dumps,
+    header_formatter=UberHeaders,
 )
 app.add_middleware(ZipkinMiddleware, config=config)
 
