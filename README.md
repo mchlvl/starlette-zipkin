@@ -121,7 +121,7 @@ config = ZipkinConfig(
     host="localhost",
     port=9411,
     service_name="service_name",
-    sampling_rate=1.0,
+    sample_rate=1.0,
     inject_response_headers=True,
     force_new_trace=False,
     json_encoder=json.dumps,
@@ -214,7 +214,7 @@ config = ZipkinConfig(
     host="localhost",
     port=9411,
     service_name="service_name",
-    sampling_rate=1.0,
+    sample_rate=1.0,
     inject_response_headers=True,
     force_new_trace=False,
     json_encoder=json.dumps,
@@ -236,7 +236,7 @@ where:
   - make sure to make accessible
 - `service_name = "service_name"`
   - name of the service
-- `sampling_rate = 1.0`
+- `sample_rate = 1.0`
   - zipkin sampling rate, default samples every call
 - `inject_response_headers = True`
   - automatically inject response headers

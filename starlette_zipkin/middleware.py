@@ -2,6 +2,7 @@ import json
 import aiozipkin as az
 import traceback
 import urllib
+import socket 
 from typing import Any
 from contextvars import ContextVar
 from urllib.parse import urlunparse
@@ -23,7 +24,7 @@ class ZipkinConfig:
         host="localhost",
         port=9411,
         service_name="service_name",
-        sampling_rate=1.0,
+        sample_rate=1.0,
         inject_response_headers=True,
         force_new_trace=False,
         json_encoder=json.dumps,
@@ -32,7 +33,7 @@ class ZipkinConfig:
         self.host = host
         self.port = port
         self.service_name = service_name
-        self.sampling_rate = sampling_rate
+        self.sample_rate = sample_rate
         self.inject_response_headers = inject_response_headers
         self.force_new_trace = force_new_trace
         self.json_encoder = json_encoder
@@ -90,7 +91,7 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
             tracer = await az.create(
                 f"http://{self.config.host}:{self.config.port}/api/v2/spans",
                 endpoint,
-                sample_rate=self.config.sampling_rate,
+                sample_rate=self.config.sample_rate,
             )
             self.tracer = tracer
             _tracer_ctx_var.set(tracer)
@@ -111,6 +112,7 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
         name = f'{scope["scheme"].upper()} {scope["method"]} {scope["path"]}'
         span.name(name)
         span.tag("component", "asgi")
+        span.tag("ip", get_ip())
         span.tag("span.kind", "server")
         if scope["type"] in {"http", "websocket"}:
             span.tag("http.method", scope["method"])
@@ -207,3 +209,8 @@ def get_root_span() -> Any:
 
 def get_tracer() -> Any:
     return _tracer_ctx_var.get()
+
+
+def get_ip() -> Any:
+    hostname = socket.gethostname()
+    return socket.gethostbyname(hostname)
