@@ -6,7 +6,7 @@ from starlette_zipkin.middleware import get_ip
 from .header_formatters import B3Headers, UberHeaders
 
 
-__version__ = "2019.09.03"
+__version__ = "2019.09.17"
 __all__ = [
     "ZipkinConfig",
     "ZipkinMiddleware",
