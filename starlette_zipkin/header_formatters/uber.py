@@ -30,6 +30,7 @@ class UberHeaders(Headers):
             context.parent_id if context.parent_id is not None else "0"
         )
 
+        # TODO: validate this is correct
         if context.debug:
             flags = "2"
         elif context.sampled:
@@ -40,8 +41,9 @@ class UberHeaders(Headers):
         headers = {
             self.TRACE_ID_HEADER: f"{context.trace_id}:{context.span_id}:{parent_span_id}:{flags}"
         }
+        response_headers.update(headers)
 
-        return headers
+        return response_headers
 
     def make_context(self, headers):
         has_uber = self.TRACE_ID_HEADER in headers
