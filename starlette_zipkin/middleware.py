@@ -136,6 +136,8 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
             self.config.header_formatter.update_headers(span, response)
 
         span.tag("http.status_code", response.status_code)
+        if response.status_code >= 400:
+            span.tag("error", True)
         span.tag(
             "http.response.headers",
             self.config.json_encoder(dict(response.headers)),
