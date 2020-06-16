@@ -18,6 +18,11 @@ class UberHeaders(Headers):
     TRACE_ID_HEADER = "uber-trace-id"
     KEYS = ["uber-trace-id"]
 
+    def __init__(self, **kwargs):
+        # Optinally can define what split character to use, default
+        # "%3A" (representing ":")
+        self.split_char = kwargs.get("split_char", "%3A")
+
     def make_headers(self, context, response_headers):
         # if headers already injected within whe application
         # using the build in b3 format, set the context to
@@ -26,9 +31,7 @@ class UberHeaders(Headers):
             context = self.make_context(response_headers)
             self._clean_b3_headers(response_headers)
 
-        parent_span_id = (
-            context.parent_id if context.parent_id is not None else "0"
-        )
+        parent_span_id = context.parent_id if context.parent_id is not None else "0"
 
         # TODO: validate this is correct
         if context.debug:
@@ -39,7 +42,8 @@ class UberHeaders(Headers):
             flags = "0"
 
         headers = {
-            self.TRACE_ID_HEADER: f"{context.trace_id}:{context.span_id}:{parent_span_id}:{flags}"
+            self.TRACE_ID_HEADER: f"{context.trace_id}{self.split_char}{context.span_id}"
+            f"{self.split_char}{parent_span_id}{self.split_char}{flags}"
         }
         response_headers.update(headers)
 
@@ -68,9 +72,7 @@ class UberHeaders(Headers):
             return make_context(headers)
 
     def _parse_uber_headers(self, headers):
-        trace_id, span_id, parent_id, flags = headers[
-            self.TRACE_ID_HEADER
-        ].split(":")
+        trace_id, span_id, parent_id, flags = headers[self.TRACE_ID_HEADER].split(self.split_char)
         debug = flags == "2"
         sampled = debug if debug else flags == "1"
         return trace_id, span_id, parent_id, debug, sampled
