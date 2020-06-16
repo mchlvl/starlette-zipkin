@@ -2,7 +2,7 @@ import json
 import aiozipkin as az
 import traceback
 import urllib
-import socket 
+import socket
 from typing import Any
 from contextvars import ContextVar
 from urllib.parse import urlunparse
@@ -29,6 +29,7 @@ class ZipkinConfig:
         force_new_trace=False,
         json_encoder=json.dumps,
         header_formatter=B3Headers,
+        header_formatter_kwargs={},
     ):
         self.host = host
         self.port = port
@@ -37,7 +38,7 @@ class ZipkinConfig:
         self.inject_response_headers = inject_response_headers
         self.force_new_trace = force_new_trace
         self.json_encoder = json_encoder
-        self.header_formatter = header_formatter()
+        self.header_formatter = header_formatter(**header_formatter_kwargs)
 
 
 class ZipkinMiddleware(BaseHTTPMiddleware):
@@ -48,18 +49,12 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
         self.validate_config()
         self.tracer = None
 
-    async def dispatch(
-        self, request: Request, call_next: RequestResponseEndpoint
-    ):
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint):
         await self.init_tracer()
         tracer = get_tracer()
 
         if self.has_trace_id(request) and not self.config.force_new_trace:
-            kw = {
-                "context": self.config.header_formatter.make_context(
-                    request.headers
-                )
-            }
+            kw = {"context": self.config.header_formatter.make_context(request.headers)}
             function = tracer.new_child
         else:
             kw = {}
@@ -139,8 +134,7 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
         if response.status_code >= 400:
             span.tag("error", True)
         span.tag(
-            "http.response.headers",
-            self.config.json_encoder(dict(response.headers)),
+            "http.response.headers", self.config.json_encoder(dict(response.headers)),
         )
         # getting body after request was evaluated due to:
         # https://github.com/encode/starlette/issues/495
