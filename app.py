@@ -1,15 +1,15 @@
-import json
 import asyncio
+import json
+
 import uvicorn
 from starlette.applications import Starlette
 from starlette.responses import JSONResponse
 from starlette.routing import Route
 
 from starlette_zipkin import (
-    ZipkinMiddleware,
-    ZipkinConfig,
     UberHeaders,
-    B3Headers,
+    ZipkinConfig,
+    ZipkinMiddleware,
     get_root_span,
     get_tracer,
 )
@@ -25,9 +25,7 @@ async def homepage(request):
         # and becomes the parent for subsequet services
         headers = child_span.context.make_headers()
         child_span.name("NewParent")
-        child_span.annotate(
-            "Child, sleeps for 1, injects headers and becomes parent"
-        )
+        child_span.annotate("Child, sleeps for 1, injects headers and becomes parent")
         await asyncio.sleep(1)
         return JSONResponse({"hello": "world"}, headers=headers)
 

@@ -8,6 +8,8 @@ twine = "*"
 uvicorn = "*"
 starlette = "*"
 pytest = "*"
+mypy = "*"
+isort = "*"
 
 [packages]
 aiozipkin = "*"
