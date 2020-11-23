@@ -1,8 +1,4 @@
-> TODO: test coverage
-
-> Using [sentry-asgi](https://github.com/encode/sentry-asgi) as a boilerplate
-
-
+<p align="center"><em>AioZipkin middleware for Starlette</em></p>
 <p align="center">
 <a href="https://github.com/mchlvl/starlette-zipkin/actions?query=workflow%3ACI" target="_blank">
     <img src="https://github.com/mchlvl/starlette-zipkin/workflows/CI/badge.svg" alt="Test">
@@ -15,18 +11,16 @@
 </a>
 </p>
 
-# AioZipkin middleware for Starlette
-
-- Client
-    - aiozipkin - async compatible zipkin library
-- Server (any zipkin 2.0 compatible server will work)
-    - Jaeger
+> TODO: test coverage
 
 ## Features
-- middleware tracing http traffic
-- injecting tracing headers to responses
-- extracting tracing headers from requests
-- context variable with the span for every incoming request - possible to instrument tracing of lower level operations
+- Using [sentry-asgi](https://github.com/encode/sentry-asgi) as a boilerplate
+- Client - based on `aiozipkin` - async compatible zipkin library
+- Server (any zipkin 2.0 compatible server will work) - Jaeger examples
+- Middleware tracing http traffic
+- Injecting tracing headers to responses
+- Extracting tracing headers from requests
+- Context variable with the span for every incoming request - possible to instrument tracing of lower level operations
 
 ## Quick start
 
