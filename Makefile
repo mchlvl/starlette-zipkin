@@ -31,7 +31,7 @@ format: sort black check-lint  ## perform all formatings
 run:  ## run uvicorn app:app --reload
 	pipenv run uvicorn app:app --reload
 build:  ## requirements & python setup.py sdist
-	pipenv run python setup.py sdist
+	pipenv run python setup.py sdist bdist_wheel
 publish: build  ## build & twine upload dist/*
 	pipenv run twine upload dist/*
 tests:  ## tests
