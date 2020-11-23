@@ -2,6 +2,19 @@
 
 > Using [sentry-asgi](https://github.com/encode/sentry-asgi) as a boilerplate
 
+
+<p align="center">
+<a href="https://github.com/mchlvl/starlette-zipkin/actions?query=workflow%3ACI" target="_blank">
+    <img src="https://github.com/mchlvl/starlette-zipkin/workflows/CI/badge.svg" alt="Test">
+</a>
+<a href="https://codecov.io/gh/mchlvl/starlette-zipkin" target="_blank">
+    <img src="https://img.shields.io/codecov/c/github/mchlvl/starlette-zipkin?color=%2334D058" alt="Coverage">
+</a>
+<a href="https://pypi.org/project/starlette-zipkin" target="_blank">
+    <img src="https://img.shields.io/pypi/v/starlette-zipkin?color=%2334D058&label=pypi%20package" alt="Package version">
+</a>
+</p>
+
 # AioZipkin middleware for Starlette
 
 - Client

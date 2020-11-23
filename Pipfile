@@ -8,13 +8,12 @@ pytest = "==6.1.2"
 mypy = "==0.790"
 isort = "==5.6.4"
 twine = "==3.2.0"
+flake8 = "==3.8.4"
+black = "*"
 
 [packages]
 aiozipkin = "==1.0.0"
 starlette = "==0.14.1"
-
-[requires]
-python_version = "3.7"
 
 [pipenv]
 allow_prereleases = false
