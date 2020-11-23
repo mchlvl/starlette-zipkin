@@ -1,18 +1,20 @@
 import json
-import aiozipkin as az
+import socket
 import traceback
 import urllib
-import socket
-from typing import Any
 from contextvars import ContextVar
+from typing import Any, Callable
 from urllib.parse import urlunparse
-from starlette.middleware.base import (
-    BaseHTTPMiddleware,
-    RequestResponseEndpoint,
-)
-from starlette.requests import Request
-from .header_formatters import B3Headers
 
+import aiozipkin as az
+from aiozipkin.span import SpanAbc
+from starlette.applications import Starlette
+from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
+from starlette.requests import Request
+from starlette.responses import Response
+from starlette.types import Scope
+
+from .header_formatters import B3Headers
 
 _root_span_ctx_var: ContextVar[Any] = ContextVar("root_span", default=None)
 _tracer_ctx_var: ContextVar[Any] = ContextVar("tracer", default=None)
@@ -21,15 +23,15 @@ _tracer_ctx_var: ContextVar[Any] = ContextVar("tracer", default=None)
 class ZipkinConfig:
     def __init__(
         self,
-        host="localhost",
-        port=9411,
-        service_name="service_name",
-        sample_rate=1.0,
-        inject_response_headers=True,
-        force_new_trace=False,
-        json_encoder=json.dumps,
-        header_formatter=B3Headers,
-        header_formatter_kwargs={},
+        host: str = "localhost",
+        port: int = 9411,
+        service_name: str = "service_name",
+        sample_rate: float = 1.0,
+        inject_response_headers: bool = True,
+        force_new_trace: bool = False,
+        json_encoder: Callable = json.dumps,
+        header_formatter: Any = B3Headers,
+        header_formatter_kwargs: dict = {},
     ):
         self.host = host
         self.port = port
@@ -42,14 +44,18 @@ class ZipkinConfig:
 
 
 class ZipkinMiddleware(BaseHTTPMiddleware):
-    def __init__(self, app, dispatch=None, config=None):
+    def __init__(
+        self, app: Starlette, dispatch: Callable = None, config: ZipkinConfig = None
+    ):
         self.app = app
         self.dispatch_func = self.dispatch if dispatch is None else dispatch
         self.config = config or ZipkinConfig()
         self.validate_config()
         self.tracer = None
 
-    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint):
+    async def dispatch(
+        self, request: Request, call_next: RequestResponseEndpoint
+    ) -> Response:
         await self.init_tracer()
         tracer = get_tracer()
 
@@ -80,7 +86,7 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
 
         await tracer.close()
 
-    async def init_tracer(self):
+    async def init_tracer(self) -> None:
         if self.tracer is None:
             endpoint = az.create_endpoint(self.config.service_name)
             tracer = await az.create(
@@ -93,17 +99,17 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
         else:
             _tracer_ctx_var.set(self.tracer)
 
-    def validate_config(self):
+    def validate_config(self) -> None:
         if not isinstance(self.config, ZipkinConfig):
             raise ValueError("Config needs to be ZipkinConfig instance")
 
-    def has_trace_id(self, request):
+    def has_trace_id(self, request: Request) -> bool:
         if self.config.header_formatter.TRACE_ID_HEADER in request.headers:
             return True
         else:
             return False
 
-    def before(self, span, scope):
+    def before(self, span: SpanAbc, scope: Scope) -> None:
         name = f'{scope["scheme"].upper()} {scope["method"]} {scope["path"]}'
         span.name(name)
         span.tag("component", "asgi")
@@ -122,7 +128,7 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
         if scope.get("endpoint"):
             span.tag("transaction", self.get_transaction(scope))
 
-    def after(self, span, response):
+    def after(self, span: SpanAbc, response: Response) -> None:
         """
         If context header not filled in by other function,
         add tracing info.
@@ -134,7 +140,8 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
         if response.status_code >= 400:
             span.tag("error", True)
         span.tag(
-            "http.response.headers", self.config.json_encoder(dict(response.headers)),
+            "http.response.headers",
+            self.config.json_encoder(dict(response.headers)),
         )
         # getting body after request was evaluated due to:
         # https://github.com/encode/starlette/issues/495
@@ -145,12 +152,12 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
         #         self.config.json_encoder(await request.json()),
         #     )
 
-    def error(self, span, error):
+    def error(self, span: SpanAbc, error: Exception) -> None:
         span.tag("error", True)
         span.tag("error.object", type(error).__name__)
         span.tag("error.stack", traceback.format_exc())
 
-    def get_url(self, scope):
+    def get_url(self, scope: Scope) -> str:
         host, port = scope["server"]
         url = urlunparse(
             (
@@ -164,11 +171,11 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
         )
         return url
 
-    def get_headers(self, scope):
+    def get_headers(self, scope: Scope) -> dict:
         """
         Extract headers from the ASGI scope.
         """
-        headers = {}
+        headers: dict = {}
         for raw_key, raw_value in scope["headers"]:
             key = raw_key.decode("latin-1")
             value = raw_value.decode("latin-1")
@@ -178,13 +185,13 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
                 headers[key] = value
         return self.config.json_encoder(headers)
 
-    def get_query(self, scope):
+    def get_query(self, scope: Scope) -> str:
         """
         Extract querystring from the ASGI scope.
         """
         return urllib.parse.unquote(scope["query_string"].decode("latin-1"))
 
-    def get_transaction(self, scope):
+    def get_transaction(self, scope: Scope) -> str:
         """
         Return a transaction string to identify the routed endpoint.
         """
@@ -195,7 +202,7 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
             or None
         )
         if not qualname:
-            return None
+            return ""
         return f"{endpoint.__module__}.{qualname}"
 
 
