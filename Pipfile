@@ -13,8 +13,5 @@ twine = "==3.2.0"
 aiozipkin = "==1.0.0"
 starlette = "==0.14.1"
 
-[requires]
-python_version = "3.7"
-
 [pipenv]
 allow_prereleases = false
