@@ -1,10 +1,12 @@
-from starlette_zipkin.middleware import ZipkinConfig
-from starlette_zipkin.middleware import ZipkinMiddleware
-from starlette_zipkin.middleware import get_root_span
-from starlette_zipkin.middleware import get_tracer
-from starlette_zipkin.middleware import get_ip
-from .header_formatters import B3Headers, UberHeaders
+from starlette_zipkin.middleware import (
+    ZipkinConfig,
+    ZipkinMiddleware,
+    get_ip,
+    get_root_span,
+    get_tracer,
+)
 
+from .header_formatters import B3Headers, UberHeaders
 
 __version__ = "2020.06.16"
 __all__ = [

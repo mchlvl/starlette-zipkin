@@ -2,15 +2,17 @@
 https://www.jaegertracing.io/docs/1.7/client-libraries/
 https://github.com/aio-libs/aiozipkin/blob/v0.5.0/aiozipkin/helpers.py
 """
+from typing import Tuple, Union
+
 from aiozipkin.helpers import (
-    TRACE_ID_HEADER as B3_TRACE_ID_HEADER,
-    SPAN_ID_HEADER,
+    FLAGS_HEADER,
     PARENT_ID_HEADER,
     SAMPLED_ID_HEADER,
-    FLAGS_HEADER,
-    make_context,
-    TraceContext,
+    SPAN_ID_HEADER,
 )
+from aiozipkin.helpers import TRACE_ID_HEADER as B3_TRACE_ID_HEADER
+from aiozipkin.helpers import TraceContext, make_context
+
 from .template import Headers
 
 
@@ -18,12 +20,12 @@ class UberHeaders(Headers):
     TRACE_ID_HEADER = "uber-trace-id"
     KEYS = ["uber-trace-id"]
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: dict):
         # Optinally can define what split character to use, default
         # "%3A" (representing ":")
         self.split_char = kwargs.get("split_char", "%3A")
 
-    def make_headers(self, context, response_headers):
+    def make_headers(self, context: TraceContext, response_headers: dict) -> dict:
         # if headers already injected within whe application
         # using the build in b3 format, set the context to
         # the child context
@@ -49,7 +51,7 @@ class UberHeaders(Headers):
 
         return response_headers
 
-    def make_context(self, headers):
+    def make_context(self, headers: dict) -> dict:
         has_uber = self.TRACE_ID_HEADER in headers
 
         if has_uber:
@@ -71,13 +73,15 @@ class UberHeaders(Headers):
             # and uber-trace-id formats together, as it is untested
             return make_context(headers)
 
-    def _parse_uber_headers(self, headers):
-        trace_id, span_id, parent_id, flags = headers[self.TRACE_ID_HEADER].split(self.split_char)
+    def _parse_uber_headers(self, headers: dict) -> Tuple:
+        trace_id, span_id, parent_id, flags = headers[self.TRACE_ID_HEADER].split(
+            self.split_char
+        )
         debug = flags == "2"
         sampled = debug if debug else flags == "1"
         return trace_id, span_id, parent_id, debug, sampled
 
-    def get_trace_id(self, headers):
+    def get_trace_id(self, headers: dict) -> Union[str, None]:
         has_uber = self.TRACE_ID_HEADER in headers
         if has_uber:
             trace_id, span_id, parent_id, debug, sampled = self._parse_uber_headers(
@@ -88,7 +92,7 @@ class UberHeaders(Headers):
             return None
 
     @staticmethod
-    def _clean_b3_headers(headers):
+    def _clean_b3_headers(headers: dict) -> None:
         b3_all = [
             B3_TRACE_ID_HEADER,
             SPAN_ID_HEADER,
