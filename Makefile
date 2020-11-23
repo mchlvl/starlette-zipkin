@@ -26,6 +26,8 @@ requirements:  ## creates requirements.txt from Pipfile
 	pipenv run pip freeze > requirements.txt
 check: check-sort check-format check-lint check-mypy ## perform checks
 format: sort black check-lint  ## perform all formatings
+tests-cov:  ## tests with coverage
+	pipenv run python -m pytest --cov --cov-report=html
 
 ##@ Run
 run:  ## run uvicorn app:app --reload

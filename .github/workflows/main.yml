@@ -28,7 +28,7 @@ jobs:
         env:
           PIPENV_VENV_IN_PROJECT: 1
       - name: Test
-        run: make tests
+        run: make tests-cov
       - name: Upload Coverage
         uses: codecov/codecov-action@v1
 
