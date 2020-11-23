@@ -27,7 +27,7 @@ requirements:  ## creates requirements.txt from Pipfile
 check: check-sort check-format check-lint check-mypy ## perform checks
 format: sort black check-lint  ## perform all formatings
 tests-cov:  ## tests with coverage
-	pipenv run python -m pytest --cov=starlette_zipkin --cov-report=html
+	pipenv run python -m pytest --cov=starlette_zipkin --cov-report=xml
 
 ##@ Run
 run:  ## run uvicorn app:app --reload
