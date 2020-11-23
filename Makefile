@@ -28,11 +28,11 @@ check: check-sort check-format check-lint check-mypy ## perform checks
 format: sort black check-lint  ## perform all formatings
 
 ##@ Run
-run: ## run uvicorn app:app --reload
+run:  ## run uvicorn app:app --reload
 	pipenv run uvicorn app:app --reload
-build: requirements  ## requirements & python setup.py sdist
-	pipenv run python setup.py sdist
+build:  ## requirements & python setup.py sdist
+	pipenv run python setup.py sdist bdist_wheel
 publish: build  ## build & twine upload dist/*
 	pipenv run twine upload dist/*
-tests: ## tests
+tests:  ## tests
 	pipenv run python -m pytest

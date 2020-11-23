@@ -1,4 +1,4 @@
-> TODO: test coverage, ci, release
+> TODO: test coverage
 
 > Using [sentry-asgi](https://github.com/encode/sentry-asgi) as a boilerplate
 

@@ -8,7 +8,7 @@ from starlette_zipkin.middleware import (
 
 from .header_formatters import B3Headers, UberHeaders
 
-__version__ = "2020.06.16"
+__version__ = "0.1.0"
 __all__ = [
     "ZipkinConfig",
     "ZipkinMiddleware",

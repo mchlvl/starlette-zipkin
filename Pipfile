@@ -4,13 +4,14 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
-pytest = "6.1.2"
-mypy = "0.790"
-isort = "5.6.4"
+pytest = "==6.1.2"
+mypy = "==0.790"
+isort = "==5.6.4"
+twine = "==3.2.0"
 
 [packages]
-aiozipkin = "1.0.0"
-starlette = "0.14.1"
+aiozipkin = "==1.0.0"
+starlette = "==0.14.1"
 
 [requires]
 python_version = "3.7"
