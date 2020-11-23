@@ -21,10 +21,10 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install pipenv
-        run: pip install pipenv
-      - name: Install Dependencies
-        run: make install
+      - name: Install dependencies
+        run: |
+          pip install pipenv
+          pipenv install --deploy --dev
       - name: Test
         run: make tests
       - name: Upload coverage
@@ -42,9 +42,9 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install pipenv
-        run: pip install pipenv
-      - name: Install Dependencies
-        run: make install
+      - name: Install dependencies
+        run: |
+          pip install pipenv
+          pipenv install --deploy --dev
       - name: Check Quality
         run: make check
