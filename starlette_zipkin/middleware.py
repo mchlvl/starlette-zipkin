@@ -22,16 +22,16 @@ _tracer_ctx_var: ContextVar[Any] = ContextVar("tracer", default=None)
 
 class ZipkinConfig:
     def __init__(
-            self,
-            host: str = "localhost",
-            port: int = 9411,
-            service_name: str = "service_name",
-            sample_rate: float = 1.0,
-            inject_response_headers: bool = True,
-            force_new_trace: bool = False,
-            json_encoder: Callable = json.dumps,
-            header_formatter: Any = B3Headers,
-            header_formatter_kwargs: dict = {},
+        self,
+        host: str = "localhost",
+        port: int = 9411,
+        service_name: str = "service_name",
+        sample_rate: float = 1.0,
+        inject_response_headers: bool = True,
+        force_new_trace: bool = False,
+        json_encoder: Callable = json.dumps,
+        header_formatter: Any = B3Headers,
+        header_formatter_kwargs: dict = {},
     ):
         self.host = host
         self.port = port
@@ -45,7 +45,7 @@ class ZipkinConfig:
 
 class ZipkinMiddleware(BaseHTTPMiddleware):
     def __init__(
-            self, app: Starlette, dispatch: Callable = None, config: ZipkinConfig = None
+        self, app: Starlette, dispatch: Callable = None, config: ZipkinConfig = None
     ):
         self.app = app
         self.dispatch_func = self.dispatch if dispatch is None else dispatch
@@ -54,7 +54,7 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
         self.tracer = None
 
     async def dispatch(
-            self, request: Request, call_next: RequestResponseEndpoint
+        self, request: Request, call_next: RequestResponseEndpoint
     ) -> Response:
         await self.init_tracer()
         tracer = get_tracer()
@@ -199,9 +199,9 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
         """
         endpoint = scope["endpoint"]
         qualname = (
-                getattr(endpoint, "__qualname__", None)
-                or getattr(endpoint, "__name__", None)
-                or None
+            getattr(endpoint, "__qualname__", None)
+            or getattr(endpoint, "__name__", None)
+            or None
         )
         if not qualname:
             return ""
