@@ -5,7 +5,7 @@
 </a>
 <a href="https://codecov.io/gh/mchlvl/starlette-zipkin" target="_blank">
     <img src="https://img.shields.io/codecov/c/github/mchlvl/starlette-zipkin?color=%2334D058" alt="Coverage">
-             
+
 </a>
 <a href="https://pypi.org/project/starlette-zipkin" target="_blank">
     <img src="https://img.shields.io/pypi/v/starlette-zipkin?color=%2334D058&label=pypi%20package" alt="Package version">
@@ -23,7 +23,7 @@
 
 ## Quick start
 
-### Run tracing server 
+### Run tracing server
 
 
 #### Jaeger all-in-one
@@ -108,6 +108,12 @@ async def homepage(request):
         # root span from middleware injects headers
         # and becomes the parent for subsequet services
         headers = child_span.context.make_headers()
+        child_span.tag("kind", "SERVER")
+        # possible span kinds
+        # CLIENT = "CLIENT"
+        # SERVER = "SERVER"
+        # PRODUCER = "PRODUCER"
+        # CONSUMER = "CONSUMER"
         child_span.name("NewParent")
         child_span.annotate(
             "Child, sleeps for 1, injects headers and becomes parent"
@@ -235,20 +241,20 @@ app.add_middleware(ZipkinMiddleware, config=config)
 where:
 
 - `host = "localhost"`
-  - default local host, needs to be set to point at the agent that collects traces (e.g. jaeger-agent)
+    - default local host, needs to be set to point at the agent that collects traces (e.g. jaeger-agent)
 - `port = 9411`
-  - default port, needs to be set to point at the agent that collects traces (e.g. jaeger-agent)
-  - 9411 is default for zipkin client/agent (and jaeger-agent)
-  - make sure to make accessible
+    - default port, needs to be set to point at the agent that collects traces (e.g. jaeger-agent)
+    - 9411 is default for zipkin client/agent (and jaeger-agent)
+    - make sure to make accessible
 - `service_name = "service_name"`
-  - name of the service
+    - name of the service
 - `sample_rate = 1.0`
-  - zipkin sampling rate, default samples every call
+    - zipkin sampling rate, default samples every call
 - `inject_response_headers = True`
-  - automatically inject response headers
+    - automatically inject response headers
 - `force_new_trace = False`
-  - if `True`, does not create child traces if incoming request contains tracing headers
+    - if `True`, does not create child traces if incoming request contains tracing headers
 - `json_encoder=json.dumps`
-  - json encoder can be provided, defaults to json dumps. It is used to format dictionaries for Jaeger UI.
-- `header_formatter=B3Headers` 
-  - defaults to b3 headers format. Can be switched to UberHeaders, which imply the `uber-trace-id` format.
+    - json encoder can be provided, defaults to json dumps. It is used to format dictionaries for Jaeger UI.
+- `header_formatter=B3Headers`
+    - defaults to b3 headers format. Can be switched to UberHeaders, which imply the `uber-trace-id` format.
