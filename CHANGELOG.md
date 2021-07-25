@@ -1,6 +1,10 @@
 # Changelog
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+## 0.1.2 (July 25, 2021)
+
+### Added
+- [PR15](https://github.com/mchlvl/starlette-zipkin/pull/15) add `span.tag("kind", "SERVER")` as default
 
 ## 0.1.1 (Nov 23, 2020)
 ### Changed
