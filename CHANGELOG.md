@@ -1,6 +1,11 @@
 # Changelog
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+## 0.1.3 (Dec 15, 2021)
+
+### Changed
+- [PR17](https://github.com/mchlvl/starlette-zipkin/pull/17) requirements changed to ranges
+
 ## 0.1.2 (July 25, 2021)
 
 ### Added
