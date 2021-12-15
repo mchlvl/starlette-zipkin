@@ -6,9 +6,6 @@ import re
 
 from setuptools import setup
 
-with open("requirements.txt") as f:
-    requirements = f.read().splitlines()
-
 
 def get_version(package):
     """
@@ -47,7 +44,10 @@ setup(
     author="Michal Vala",
     author_email="mic.vala@gmail.com",
     packages=get_packages("starlette_zipkin"),
-    install_requires=requirements,
+    install_requires=[
+        'aiozipkin <2',
+        'starlette >0.14,<18',
+    ],
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Environment :: Web Environment",

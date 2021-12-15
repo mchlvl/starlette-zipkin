@@ -1,2 +1,2 @@
 aiozipkin==1.0.0
-starlette==0.14.1
+starlette==0.16.0
