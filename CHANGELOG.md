@@ -1,6 +1,13 @@
 # Changelog
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+
+## 0.1.4 (Dec 16, 2021)
+
+### Changed
+- [PR19](https://github.com/mchlvl/starlette-zipkin/pull/19) more native way to log span kind `span.tag("kind", "SERVER")` -> `span.kind(az.SERVER)`
+
+
 ## 0.1.3 (Dec 15, 2021)
 
 ### Changed
