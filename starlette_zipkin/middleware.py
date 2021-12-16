@@ -114,8 +114,7 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
         span.name(name)
         span.tag("component", "asgi")
         span.tag("ip", get_ip())
-        span.tag("span.kind", "server")
-        span.tag("kind", "SERVER")
+        span.kind(az.SERVER)
 
         if scope["type"] in {"http", "websocket"}:
             span.tag("http.method", scope["method"])

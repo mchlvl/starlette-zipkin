@@ -108,7 +108,7 @@ async def homepage(request):
         # root span from middleware injects headers
         # and becomes the parent for subsequet services
         headers = child_span.context.make_headers()
-        child_span.tag("kind", "SERVER")
+        child_span.kind("SERVER")
         # possible span kinds
         # CLIENT = "CLIENT"
         # SERVER = "SERVER"
