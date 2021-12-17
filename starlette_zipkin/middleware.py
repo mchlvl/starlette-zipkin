@@ -67,10 +67,9 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
             function = tracer.new_trace
 
         with function(**kw) as span:
+            # set root span using context variable
+            root_span = _root_span_ctx_var.set(span)
             try:
-                # set root span using context variable
-                root_span = _root_span_ctx_var.set(span)
-
                 self.before(span, request.scope)
                 response = await call_next(request)
                 self.after(span, response)
