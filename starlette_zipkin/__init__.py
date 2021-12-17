@@ -7,6 +7,7 @@ from starlette_zipkin.middleware import (
 )
 
 from .header_formatters import B3Headers, UberHeaders
+from starlette_zipkin.trace import trace
 
 __version__ = "0.1.4"
 __all__ = [
@@ -17,4 +18,5 @@ __all__ = [
     "get_tracer",
     "get_root_span",
     "get_ip",
+    "trace",
 ]
