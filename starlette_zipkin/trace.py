@@ -1,17 +1,48 @@
 import asyncio
-from contextvars import ContextVar
+from contextvars import ContextVar, Token
 from functools import wraps
-from starlette_zipkin.header_formatters.template import Headers as HeadersFormater
-from starlette_zipkin.header_formatters.b3 import B3Headers
-from typing import Any, Callable, Optional, cast
+from typing import Any, Callable, Dict, Optional, cast
+
 import aiozipkin as az
 from aiozipkin.span import SpanAbc
 
-from .middleware import get_root_span, get_tracer
+from starlette_zipkin.header_formatters.b3 import B3Headers
+from starlette_zipkin.header_formatters.template import Headers as HeadersFormater
 
+from .config import ZipkinConfig
+
+_tracer_ctx_var: ContextVar[Any] = ContextVar("tracer", default=None)
+_root_span_ctx_var: ContextVar[Any] = ContextVar("root_span", default=None)
 _cur_span_ctx_var: ContextVar[Optional[SpanAbc]] = ContextVar(
     "current_span", default=None
 )
+
+
+def get_root_span() -> SpanAbc:
+    return _root_span_ctx_var.get()
+
+
+def get_tracer() -> az.Tracer:
+    return _tracer_ctx_var.get()
+
+
+def install_root_span(span: SpanAbc) -> Token:
+    return _root_span_ctx_var.set(span)
+
+
+def reset_root_span(tok: Token) -> None:
+    _root_span_ctx_var.reset(tok)
+
+
+async def init_tracer(config: ZipkinConfig) -> az.Tracer:
+    endpoint = az.create_endpoint(config.service_name)
+    tracer = await az.create(
+        f"http://{config.host}:{config.port}/api/v2/spans",
+        endpoint,
+        sample_rate=config.sample_rate,
+    )
+    _tracer_ctx_var.set(tracer)
+    return tracer
 
 
 class trace:
@@ -25,7 +56,7 @@ class trace:
         self._span: Optional[SpanAbc] = None
 
     @classmethod
-    def make_headers(cls):
+    def make_headers(cls) -> Dict[str, str]:
         child_span = _cur_span_ctx_var.get()
         return (
             cls.header_formatters.make_headers(child_span.context, {})
@@ -34,8 +65,8 @@ class trace:
         )
 
     @property
-    def trace_id(self):
-        return self._span.context.trace_id
+    def trace_id(self) -> Optional[str]:
+        return self._span.context.trace_id if self._span else None
 
     def __call__(self, func: Callable) -> Callable:
 
@@ -77,7 +108,6 @@ class trace:
             parent = get_root_span()
         self._span = tracer.new_child(parent.context)
         self._tok = _cur_span_ctx_var.set(self._span)
-        parent = _cur_span_ctx_var.get()
         self._span.__enter__()
         self._span.name(self._name)
         self._span.kind(self._kind)

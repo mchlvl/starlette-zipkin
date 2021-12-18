@@ -1,13 +1,13 @@
 import pytest
 
 import aiozipkin as az
-from aiozipkin.transport import Transport, TransportABC
+from aiozipkin.transport import TransportABC
 
 from starlette.applications import Starlette
 from starlette.responses import PlainTextResponse
 from starlette_zipkin import B3Headers, UberHeaders
-from starlette_zipkin import ZipkinMiddleware, ZipkinConfig
-from starlette_zipkin.middleware import _root_span_ctx_var, _tracer_ctx_var
+from starlette_zipkin.trace import _root_span_ctx_var, _tracer_ctx_var, install_root_span, reset_root_span
+
 
 @pytest.fixture
 def b3_keys():
@@ -64,6 +64,6 @@ def tracer(transport):
 @pytest.fixture
 def root_span(tracer):
     span = tracer.new_trace()
-    tok = _root_span_ctx_var.set(span)
+    tok = install_root_span(span)
     yield span
-    _root_span_ctx_var.reset(tok)
+    reset_root_span(tok)
