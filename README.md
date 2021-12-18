@@ -92,8 +92,7 @@ from starlette.routing import Route
 from starlette_zipkin import (
     ZipkinMiddleware,
     ZipkinConfig,
-    get_root_span,
-    get_tracer,
+    trace,
     B3Headers,
     UberHeaders
 )
