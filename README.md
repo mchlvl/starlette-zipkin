@@ -80,6 +80,7 @@ To instrument tracing at lower levels, two helper functions are available:
 
 - `get_root_span` - returns the span instance corresponding to current request
 - `get_tracer` - returns the tracer instance corresponding to current request
+- `trace` - create span in the trace
 
 ```
 import json
@@ -99,10 +100,8 @@ from starlette_zipkin import (
 
 
 async def homepage(request):
-    root_span = get_root_span()
-    tracer = get_tracer()
 
-    with tracer.new_child(root_span.context) as child_span:
+    with trace("NewParent") as child_span:
         # ! if headers not explicitly provided,\
         # root span from middleware injects headers
         # and becomes the parent for subsequet services
@@ -113,7 +112,6 @@ async def homepage(request):
         # SERVER = "SERVER"
         # PRODUCER = "PRODUCER"
         # CONSUMER = "CONSUMER"
-        child_span.name("NewParent")
         child_span.annotate(
             "Child, sleeps for 1, injects headers and becomes parent"
         )
