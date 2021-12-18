@@ -1,0 +1,46 @@
+version: "3"
+
+networks:
+  proxy:
+
+services:
+  app:
+    build: ./app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - api
+    networks:
+      - "proxy"
+    environment:
+      - "tracer=jaeger"
+    volumes:
+      - "../../starlette_zipkin:/home/user/.local/lib/python3.10/site-packages/starlette_zipkin"
+  api:
+    build: ./api
+    ports:
+      - "8001:8000"
+    networks:
+      - "proxy"
+    environment:
+      - "tracer=jaeger"
+    volumes:
+      - "../../starlette_zipkin:/home/user/.local/lib/python3.10/site-packages/starlette_zipkin"
+      # - "../../.venv/lib/python3.10/site-packages/aiozipkin/:/home/user/.local/lib/python3.10/site-packages/aiozipkin/"
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    environment:
+      - "COLLECTOR_ZIPKIN_HOST_PORT=:9411"
+    networks:
+      - "proxy"
+    ports:
+      - "9411:9411"
+      - "16686:16686"
+
+  zipkin:
+    image: openzipkin/zipkin-slim
+    networks:
+      - "proxy"
+    ports:
+      - "9410:9411"
