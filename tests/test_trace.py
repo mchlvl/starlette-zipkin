@@ -73,10 +73,12 @@ def test_trace_context(transport, root_span):
 
     dummy_record = dummy_trace._record.asdict()
     assert dummy_record == {
-        "annotations": [{
-            "timestamp": dummy_record["annotations"][0]["timestamp"],
-            "value": "dummy annotation",
-        }],
+        "annotations": [
+            {
+                "timestamp": dummy_record["annotations"][0]["timestamp"],
+                "value": "dummy annotation",
+            }
+        ],
         "debug": False,
         "duration": dummy_record["duration"],
         "id": dummy_trace.context.span_id,
@@ -148,3 +150,20 @@ async def test_many_traces(transport, root_span):
         dummy_trace_2._record.asdict(),
         dummy_trace_1._record.asdict(),
     ]
+
+
+def test_trace_id(root_span):
+    with trace("my dummy trace 4") as child_span:
+        assert child_span.trace_id is not None
+        assert child_span.trace_id == root_span.context.trace_id
+
+
+def test_headers(root_span):
+    with trace("my dummy trace 4") as child_span:
+        assert trace.make_headers() == {
+            "X-B3-Flags": "0",
+            "X-B3-ParentSpanId": root_span.context.span_id,
+            "X-B3-Sampled": "1",
+            "X-B3-SpanId": child_span._span.context.span_id,
+            "X-B3-TraceId": child_span.trace_id,
+        }
