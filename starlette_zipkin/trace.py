@@ -1,7 +1,9 @@
 import asyncio
 from contextvars import ContextVar
 from functools import wraps
-from typing import Any, Callable, Coroutine, Optional, Union, cast
+from starlette_zipkin.header_formatters.template import Headers as HeadersFormater
+from starlette_zipkin.header_formatters.b3 import B3Headers
+from typing import Any, Callable, Optional, cast
 import aiozipkin as az
 from aiozipkin.span import SpanAbc
 
@@ -12,18 +14,24 @@ _cur_span_ctx_var: ContextVar[Optional[SpanAbc]] = ContextVar(
 )
 
 
-def make_headers():
-    child_span = _cur_span_ctx_var.get()
-    return child_span.context.make_headers() if child_span else {}
-
-
 class trace:
     """Decorator and context manager to handle trace easily."""
+
+    header_formatters: HeadersFormater = B3Headers()
 
     def __init__(self, name: str, kind: str = az.SERVER) -> None:
         self._name = name
         self._kind = kind
         self._span: Optional[SpanAbc] = None
+
+    @classmethod
+    def make_headers(cls):
+        child_span = _cur_span_ctx_var.get()
+        return (
+            cls.header_formatters.make_headers(child_span.context, {})
+            if child_span
+            else {}
+        )
 
     @property
     def trace_id(self):
@@ -32,6 +40,7 @@ class trace:
     def __call__(self, func: Callable) -> Callable:
 
         if asyncio.iscoroutinefunction(cast(Any, func)):
+
             @wraps(func)
             async def inner_coro(*args: Any, **kwds: Any) -> Any:
                 async with self:
@@ -39,6 +48,7 @@ class trace:
 
             return inner_coro
         else:
+
             @wraps(func)
             def inner(*args: Any, **kwds: Any) -> Any:
                 with self:

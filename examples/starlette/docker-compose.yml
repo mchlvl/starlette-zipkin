@@ -38,9 +38,11 @@ services:
       - "9411:9411"
       - "16686:16686"
 
-  zipkin:
-    image: openzipkin/zipkin-slim
-    networks:
-      - "proxy"
-    ports:
-      - "9410:9411"
+  # To test with zipkin, uncomment and replace environment variable "tracer"
+  # from "jaeger" by "zipkin" in app and api
+  # zipkin:
+  #   image: openzipkin/zipkin-slim
+  #   networks:
+  #     - "proxy"
+  #   ports:
+  #     - "9410:9411"

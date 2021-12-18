@@ -52,6 +52,9 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
         self.config = config or ZipkinConfig()
         self.validate_config()
         self.tracer = None
+        from .trace import trace
+
+        trace.header_formatters = self.config.header_formatter
 
     async def dispatch(
         self, request: Request, call_next: RequestResponseEndpoint

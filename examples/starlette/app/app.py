@@ -7,7 +7,7 @@ from httpx import AsyncClient
 from starlette.applications import Starlette
 from starlette.responses import JSONResponse
 from starlette.routing import Route
-from starlette_zipkin import ZipkinConfig, ZipkinMiddleware, make_headers, trace
+from starlette_zipkin import ZipkinConfig, ZipkinMiddleware, trace
 
 TRACER = os.getenv("tracer", "zipkin")
 
@@ -15,7 +15,7 @@ TRACER = os.getenv("tracer", "zipkin")
 @trace("api call", "CLIENT")
 async def api_call():
     async with AsyncClient() as cli:
-        return await cli.get("http://api:8000/", headers=make_headers())
+        return await cli.get("http://api:8000/", headers=trace.make_headers())
 
 
 async def homepage(request):
