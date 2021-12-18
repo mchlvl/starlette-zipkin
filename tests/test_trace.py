@@ -67,12 +67,16 @@ def test_trace_context(transport, root_span):
 
     dummy_trace = None
 
-    with trace("my dummy trace"):
+    with trace("my dummy trace") as span:
+        span.annotate("dummy annotation")
         dummy_trace = _cur_span_ctx_var.get()
 
     dummy_record = dummy_trace._record.asdict()
     assert dummy_record == {
-        "annotations": [],
+        "annotations": [{
+            "timestamp": dummy_record["annotations"][0]["timestamp"],
+            "value": "dummy annotation",
+        }],
         "debug": False,
         "duration": dummy_record["duration"],
         "id": dummy_trace.context.span_id,
