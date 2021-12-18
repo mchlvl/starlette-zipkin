@@ -1,8 +1,7 @@
 import asyncio
 from contextvars import ContextVar
 from functools import wraps
-from typing import Optional
-
+from typing import Any, Callable, Coroutine, Optional, Union, cast
 import aiozipkin as az
 from aiozipkin.span import SpanAbc
 
@@ -13,30 +12,39 @@ _cur_span_ctx_var: ContextVar[Optional[SpanAbc]] = ContextVar(
 )
 
 
+def make_headers():
+    child_span = _cur_span_ctx_var.get()
+    return child_span.context.make_headers() if child_span else {}
+
+
 class trace:
     """Decorator and context manager to handle trace easily."""
 
-    def __init__(self, name, kind=az.SERVER) -> None:
+    def __init__(self, name: str, kind: str = az.SERVER) -> None:
         self._name = name
         self._kind = kind
-        self._span = None
+        self._span: Optional[SpanAbc] = None
 
-    def __call__(self, func):
+    @property
+    def trace_id(self):
+        return self._span.context.trace_id
 
-        if asyncio.iscoroutinefunction(func):
+    def __call__(self, func: Callable) -> Callable:
 
+        if asyncio.iscoroutinefunction(cast(Any, func)):
             @wraps(func)
-            async def inner(*args, **kwds):
+            async def inner_coro(*args: Any, **kwds: Any) -> Any:
                 async with self:
                     return await func(*args, **kwds)
 
+            return inner_coro
         else:
-
-            def inner(*args, **kwds):
+            @wraps(func)
+            def inner(*args: Any, **kwds: Any) -> Any:
                 with self:
                     return func(*args, **kwds)
 
-        return inner
+            return inner
 
     def tag(self, key: str, value: str) -> "trace":
         """Add a tag to the current trace span."""
@@ -52,7 +60,7 @@ class trace:
         self._span.annotate(value, ts)
         return self
 
-    def __enter__(self):
+    def __enter__(self) -> "trace":
         tracer = get_tracer()
         parent = _cur_span_ctx_var.get()
         if parent is None:
@@ -65,12 +73,13 @@ class trace:
         self._span.kind(self._kind)
         return self
 
-    def __exit__(self, *exc):
+    def __exit__(self, *exc: Any) -> None:
         _cur_span_ctx_var.reset(self._tok)
-        self._span.__exit__(*exc)
+        if self._span:
+            self._span.__exit__(*exc)
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> "trace":
         return self.__enter__()
 
-    async def __aexit__(self, *exc):
+    async def __aexit__(self, *exc: Any) -> None:
         return self.__exit__(*exc)
