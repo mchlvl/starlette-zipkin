@@ -6,7 +6,7 @@ from aiozipkin.transport import TransportABC
 from starlette.applications import Starlette
 from starlette.responses import PlainTextResponse
 from starlette_zipkin import B3Headers, UberHeaders
-from starlette_zipkin.trace import _root_span_ctx_var, _tracer_ctx_var, install_root_span, reset_root_span
+from starlette_zipkin.trace import _tracer_ctx_var, install_root_span, reset_root_span
 
 
 @pytest.fixture
@@ -20,7 +20,7 @@ def uber_keys():
 
 
 @pytest.fixture
-def app():
+def app(tracer):
     app = Starlette()
 
     @app.route("/sync-message")
