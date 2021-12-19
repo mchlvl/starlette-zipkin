@@ -5,3 +5,4 @@ dist
 build/*
 .env
 build/*
+__pycache__

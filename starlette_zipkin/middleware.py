@@ -1,8 +1,6 @@
-import json
 import socket
 import traceback
 import urllib
-from contextvars import ContextVar
 from typing import Any, Callable
 from urllib.parse import urlunparse
 
@@ -14,33 +12,8 @@ from starlette.requests import Request
 from starlette.responses import Response
 from starlette.types import Scope
 
-from .header_formatters import B3Headers
-
-_root_span_ctx_var: ContextVar[Any] = ContextVar("root_span", default=None)
-_tracer_ctx_var: ContextVar[Any] = ContextVar("tracer", default=None)
-
-
-class ZipkinConfig:
-    def __init__(
-        self,
-        host: str = "localhost",
-        port: int = 9411,
-        service_name: str = "service_name",
-        sample_rate: float = 1.0,
-        inject_response_headers: bool = True,
-        force_new_trace: bool = False,
-        json_encoder: Callable = json.dumps,
-        header_formatter: Any = B3Headers,
-        header_formatter_kwargs: dict = {},
-    ):
-        self.host = host
-        self.port = port
-        self.service_name = service_name
-        self.sample_rate = sample_rate
-        self.inject_response_headers = inject_response_headers
-        self.force_new_trace = force_new_trace
-        self.json_encoder = json_encoder
-        self.header_formatter = header_formatter(**header_formatter_kwargs)
+from .config import ZipkinConfig
+from .trace import get_tracer, init_tracer, install_root_span, reset_root_span
 
 
 class ZipkinMiddleware(BaseHTTPMiddleware):
@@ -56,8 +29,9 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
     async def dispatch(
         self, request: Request, call_next: RequestResponseEndpoint
     ) -> Response:
-        await self.init_tracer()
         tracer = get_tracer()
+        if tracer is None:
+            tracer = await init_tracer(self.config)
 
         if self.has_trace_id(request) and not self.config.force_new_trace:
             kw = {"context": self.config.header_formatter.make_context(request.headers)}
@@ -67,10 +41,9 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
             function = tracer.new_trace
 
         with function(**kw) as span:
+            # set root span using context variable
+            root_span = install_root_span(span)
             try:
-                # set root span using context variable
-                root_span = _root_span_ctx_var.set(span)
-
                 self.before(span, request.scope)
                 response = await call_next(request)
                 self.after(span, response)
@@ -82,22 +55,7 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
                 raise error from None
 
             finally:
-                _root_span_ctx_var.reset(root_span)
-
-        await tracer.close()
-
-    async def init_tracer(self) -> None:
-        if self.tracer is None:
-            endpoint = az.create_endpoint(self.config.service_name)
-            tracer = await az.create(
-                f"http://{self.config.host}:{self.config.port}/api/v2/spans",
-                endpoint,
-                sample_rate=self.config.sample_rate,
-            )
-            self.tracer = tracer
-            _tracer_ctx_var.set(tracer)
-        else:
-            _tracer_ctx_var.set(self.tracer)
+                reset_root_span(root_span)
 
     def validate_config(self) -> None:
         if not isinstance(self.config, ZipkinConfig):
@@ -205,14 +163,6 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
         if not qualname:
             return ""
         return f"{endpoint.__module__}.{qualname}"
-
-
-def get_root_span() -> Any:
-    return _root_span_ctx_var.get()
-
-
-def get_tracer() -> Any:
-    return _tracer_ctx_var.get()
 
 
 def get_ip() -> Any:
