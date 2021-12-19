@@ -2,6 +2,12 @@
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 0.2.0 (Dec 19, 2021)
+
+### Changed
+- [PR21](https://github.com/mchlvl/starlette-zipkin/pull/21) code refactor, new functionality, added `trace` context manager to add spans easier and updated examples, tests, readme
+
+
 ## 0.1.4 (Dec 16, 2021)
 
 ### Changed
