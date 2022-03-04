@@ -28,7 +28,7 @@
 
 #### Jaeger all-in-one
 
-Follow instructions at [https://www.jaegertracing.io/docs/1.13/getting-started/](https://www.jaegertracing.io/docs/1.13/getting-started/)
+Follow instructions at [https://www.jaegertracing.io/docs/latest/getting-started/](https://www.jaegertracing.io/docs/latest/getting-started/)
 
 ```
 $ docker run -d --name jaeger \
@@ -71,8 +71,6 @@ if __name__ == "__main__":
 By default the client emits to `http://localhost:9411`.
 
 All traffic is captured and available at [http://localhost:16686/](http://localhost:16686/)
-
-![jaeger](jaeger.PNG)
 
 ## Advanced Tutorial
 
@@ -143,73 +141,6 @@ if __name__ == "__main__":
 ```
 
 This way we are able to followup at the call from a different service. Here we use the same server, but pass the tracing headers to subsequent calls to demonstrate future spans:
-
-### Step by step example:
-
-1. client sends
-
-   ```
-   GET /homepage HTTP/1.1
-   Host: localhost:8000
-   User-Agent: PostmanRuntime/7.15.2
-   Accept: */*
-   Cache-Control: no-cache
-   Postman-Token: 519bda7e-bb9c-40c4-a9a5-c8df5524ced2,189c4252-322a-415d-a637-ecdca9a79cb0
-   Host: localhost:8000
-   Accept-Encoding: gzip, deflate
-   Connection: keep-alive
-   cache-control: no-cache
-   ```
-
-   Server responds
-
-   ```
-   X-B3-TraceId: ddfc5b2181e08d3360e4072522c5235a
-   X-B3-SpanId: 34dcd9a29c01efe2
-   X-B3-Flags: 0
-   X-B3-Sampled: 1
-   x-b3-parentspanid: b9872416ce86e870
-
-   {"hello":"world"}
-   ```
-
-2. client follows up on first trace by passing the context from headers
-
-   ```
-   GET /homepage HTTP/1.1
-   Host: localhost:8000
-   X-B3-TraceId: ddfc5b2181e08d3360e4072522c5235a
-   X-B3-SpanId: 34dcd9a29c01efe2
-   X-B3-Flags: 0
-   X-B3-Sampled: 1
-   x-b3-parentspanid: b9872416ce86e870
-   User-Agent: PostmanRuntime/7.15.2
-   Accept: */*
-   Cache-Control: no-cache
-   Postman-Token: 2eb6d43a-ed2c-4291-b0c4-c41335e40f6b,bd6376b5-4ab9-45bd-91ab-10f4831547e7
-   Host: localhost:8000
-   Accept-Encoding: gzip, deflate
-   Connection: keep-alive
-   cache-control: no-cache
-   ```
-
-   Server responds (again with a new set of optional tracing ids)
-
-   ```
-   X-B3-TraceId: ddfc5b2181e08d3360e4072522c5235a
-   X-B3-SpanId: 3c550de9d7cb62aa
-   X-B3-Flags: 0
-   X-B3-Sampled: 1
-   x-b3-parentspanid: ecb56ce4eba6aed5
-
-   {
-   "hello": "world"
-   }
-   ```
-
-Both calls are collected by Jaeger and available in WebUI
-
-![](step_by_step.PNG)
 
 ## Configuration
 

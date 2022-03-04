@@ -31,7 +31,7 @@ tests-cov:  ## tests with coverage
 
 ##@ Run
 run:  ## run uvicorn app:app --reload
-	pipenv run uvicorn app:app --reload
+	pipenv run uvicorn examples.starlette_old.app:app --reload
 build:  ## requirements & python setup.py sdist
 	pipenv run python setup.py sdist bdist_wheel
 publish: build  ## build & twine upload dist/*
