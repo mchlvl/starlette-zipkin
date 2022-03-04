@@ -37,7 +37,8 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
     ) -> Response:
         # check for externally provided tracer - if none provided, we will create one and hold on to it to reuse it,
         # similar to https://github.com/aio-libs/aiozipkin/blob/master/examples/aiohttp_example.py
-        if (external_tracer := get_tracer()) is None:
+        external_tracer = get_tracer()
+        if external_tracer is None:
             if self.tracer is None:
                 self.tracer = await init_tracer(self.config)
             # propagate tracer instance via a context variable to other parts of the application
