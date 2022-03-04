@@ -1,3 +1,4 @@
+import asyncio
 import socket
 import traceback
 import urllib
@@ -13,7 +14,13 @@ from starlette.responses import Response
 from starlette.types import Scope
 
 from .config import ZipkinConfig
-from .trace import get_tracer, init_tracer, install_root_span, reset_root_span
+from .trace import (
+    get_tracer,
+    init_tracer,
+    install_root_span,
+    reset_root_span,
+    _tracer_ctx_var,
+)
 
 
 class ZipkinMiddleware(BaseHTTPMiddleware):
@@ -29,9 +36,14 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
     async def dispatch(
         self, request: Request, call_next: RequestResponseEndpoint
     ) -> Response:
-        tracer = get_tracer()
-        if tracer is None:
-            tracer = await init_tracer(self.config)
+        # check for externally provided tracer - if none provided, we will create one and hold on to it to reuse it,
+        # similar to https://github.com/aio-libs/aiozipkin/blob/master/examples/aiohttp_example.py
+        if (external_tracer := get_tracer()) is None:
+            if self.tracer is None:
+                self.tracer = await init_tracer(self.config)
+            # propagate tracer instance via a context variable to other parts of the application
+            tracer_reset_token = _tracer_ctx_var.set(self.tracer)
+        tracer = external_tracer or self.tracer
 
         if self.has_trace_id(request) and not self.config.force_new_trace:
             kw = {"context": self.config.header_formatter.make_context(request.headers)}
@@ -56,6 +68,8 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
 
             finally:
                 reset_root_span(root_span)
+                if not external_tracer:
+                    _tracer_ctx_var.reset(tracer_reset_token)
 
     def validate_config(self) -> None:
         if not isinstance(self.config, ZipkinConfig):

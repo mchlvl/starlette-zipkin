@@ -41,7 +41,6 @@ async def init_tracer(config: ZipkinConfig) -> az.Tracer:
         endpoint,
         sample_rate=config.sample_rate,
     )
-    _tracer_ctx_var.set(tracer)
     return tracer
 
 
