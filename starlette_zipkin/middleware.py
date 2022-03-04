@@ -15,11 +15,11 @@ from starlette.types import Scope
 
 from .config import ZipkinConfig
 from .trace import (
+    _tracer_ctx_var,
     get_tracer,
     init_tracer,
     install_root_span,
     reset_root_span,
-    _tracer_ctx_var,
 )
 
 
