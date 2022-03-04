@@ -17,6 +17,8 @@ from .trace import init_tracer, install_root_span, reset_root_span
 
 
 class ZipkinMiddleware(BaseHTTPMiddleware):
+    tracer: az.Tracer
+
     def __init__(
         self, app: Starlette, dispatch: Callable = None, config: ZipkinConfig = None
     ):
@@ -24,7 +26,7 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
         self.dispatch_func = self.dispatch if dispatch is None else dispatch
         self.config = config or ZipkinConfig()
         self.validate_config()
-        self.tracer = None
+        self.tracer = None  # Initialized on first dispatch
 
     async def dispatch(
         self, request: Request, call_next: RequestResponseEndpoint
