@@ -13,7 +13,7 @@ from starlette.responses import Response
 from starlette.types import Scope
 
 from .config import ZipkinConfig
-from .trace import init_tracer, install_root_span, reset_root_span
+from .trace import install_root_span, install_tracer, reset_root_span, reset_tracer
 
 
 class ZipkinMiddleware(BaseHTTPMiddleware):
@@ -32,7 +32,9 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
         self, request: Request, call_next: RequestResponseEndpoint
     ) -> Response:
         if self.tracer is None:
-            self.tracer = await init_tracer(self.config)
+            self.tracer = await self.init_tracer()
+
+        tracer_token = install_tracer(self.tracer)
 
         if self.has_trace_id(request) and not self.config.force_new_trace:
             kw = {"context": self.config.header_formatter.make_context(request.headers)}
@@ -57,6 +59,16 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
 
             finally:
                 reset_root_span(root_span)
+                reset_tracer(tracer_token)
+
+    async def init_tracer(self) -> az.Tracer:
+        endpoint = az.create_endpoint(self.config.service_name)
+        tracer = await az.create(
+            f"http://{self.config.host}:{self.config.port}/api/v2/spans",
+            endpoint,
+            sample_rate=self.config.sample_rate,
+        )
+        return tracer
 
     def validate_config(self) -> None:
         if not isinstance(self.config, ZipkinConfig):

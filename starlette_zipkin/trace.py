@@ -9,8 +9,6 @@ from aiozipkin.span import SpanAbc
 from starlette_zipkin.header_formatters.b3 import B3Headers
 from starlette_zipkin.header_formatters.template import Headers as HeadersFormater
 
-from .config import ZipkinConfig
-
 _tracer_ctx_var: ContextVar[Any] = ContextVar("tracer", default=None)
 _root_span_ctx_var: ContextVar[Any] = ContextVar("root_span", default=None)
 _cur_span_ctx_var: ContextVar[Optional[SpanAbc]] = ContextVar(
@@ -34,15 +32,12 @@ def reset_root_span(tok: Token) -> None:
     _root_span_ctx_var.reset(tok)
 
 
-async def init_tracer(config: ZipkinConfig) -> az.Tracer:
-    endpoint = az.create_endpoint(config.service_name)
-    tracer = await az.create(
-        f"http://{config.host}:{config.port}/api/v2/spans",
-        endpoint,
-        sample_rate=config.sample_rate,
-    )
-    _tracer_ctx_var.set(tracer)
-    return tracer
+def install_tracer(tracer: az.Tracer) -> Token:
+    return _tracer_ctx_var.set(tracer)
+
+
+def reset_tracer(tok: Token) -> None:
+    _tracer_ctx_var.reset(tok)
 
 
 class trace:
