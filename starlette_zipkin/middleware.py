@@ -13,10 +13,12 @@ from starlette.responses import Response
 from starlette.types import Scope
 
 from .config import ZipkinConfig
-from .trace import get_tracer, init_tracer, install_root_span, reset_root_span
+from .trace import install_root_span, install_tracer, reset_root_span, reset_tracer
 
 
 class ZipkinMiddleware(BaseHTTPMiddleware):
+    tracer: az.Tracer
+
     def __init__(
         self, app: Starlette, dispatch: Callable = None, config: ZipkinConfig = None
     ):
@@ -24,21 +26,22 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
         self.dispatch_func = self.dispatch if dispatch is None else dispatch
         self.config = config or ZipkinConfig()
         self.validate_config()
-        self.tracer = None
+        self.tracer = None  # Initialized on first dispatch
 
     async def dispatch(
         self, request: Request, call_next: RequestResponseEndpoint
     ) -> Response:
-        tracer = get_tracer()
-        if tracer is None:
-            tracer = await init_tracer(self.config)
+        if self.tracer is None:
+            self.tracer = await self.init_tracer()
+
+        tracer_token = install_tracer(self.tracer)
 
         if self.has_trace_id(request) and not self.config.force_new_trace:
             kw = {"context": self.config.header_formatter.make_context(request.headers)}
-            function = tracer.new_child
+            function = self.tracer.new_child
         else:
             kw = {}
-            function = tracer.new_trace
+            function = self.tracer.new_trace
 
         with function(**kw) as span:
             # set root span using context variable
@@ -56,6 +59,16 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
 
             finally:
                 reset_root_span(root_span)
+                reset_tracer(tracer_token)
+
+    async def init_tracer(self) -> az.Tracer:
+        endpoint = az.create_endpoint(self.config.service_name)
+        tracer = await az.create(
+            f"http://{self.config.host}:{self.config.port}/api/v2/spans",
+            endpoint,
+            sample_rate=self.config.sample_rate,
+        )
+        return tracer
 
     def validate_config(self) -> None:
         if not isinstance(self.config, ZipkinConfig):
