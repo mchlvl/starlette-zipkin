@@ -9,7 +9,7 @@ help:
 black:
 	pipenv run black starlette_zipkin
 sort:
-	pipenv run isort starlette_zipkin
+	pipenv run isort starlette_zipkin --profile black
 check-format:
 	pipenv run black starlette_zipkin --check
 check-lint:
