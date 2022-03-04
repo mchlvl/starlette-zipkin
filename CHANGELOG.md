@@ -2,6 +2,12 @@
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 0.2.1 (March 5, 2022)
+
+### Changed
+- [PR28](https://github.com/mchlvl/starlette-zipkin/pull/28) fixes `az.Tracer` leak (used to create a new one with every request)
+
+
 ## 0.2.0 (Dec 19, 2021)
 
 ### Changed
