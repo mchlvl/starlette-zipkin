@@ -13,7 +13,7 @@ from starlette.responses import Response
 from starlette.types import Scope
 
 from .config import ZipkinConfig
-from .trace import get_tracer, init_tracer, install_root_span, reset_root_span
+from .trace import init_tracer, install_root_span, reset_root_span
 
 
 class ZipkinMiddleware(BaseHTTPMiddleware):
@@ -29,16 +29,15 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
     async def dispatch(
         self, request: Request, call_next: RequestResponseEndpoint
     ) -> Response:
-        tracer = get_tracer()
-        if tracer is None:
-            tracer = await init_tracer(self.config)
+        if self.tracer is None:
+            self.tracer = await init_tracer(self.config)
 
         if self.has_trace_id(request) and not self.config.force_new_trace:
             kw = {"context": self.config.header_formatter.make_context(request.headers)}
-            function = tracer.new_child
+            function = self.tracer.new_child
         else:
             kw = {}
-            function = tracer.new_trace
+            function = self.tracer.new_trace
 
         with function(**kw) as span:
             # set root span using context variable
