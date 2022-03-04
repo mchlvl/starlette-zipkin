@@ -1,3 +1,4 @@
+import asyncio
 import socket
 import traceback
 import urllib
@@ -47,7 +48,7 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
                 self.before(span, request.scope)
                 response = await call_next(request)
                 self.after(span, response)
-
+                asyncio.get_event_loop().create_task(tracer.close())
                 return response
 
             except Exception as error:
