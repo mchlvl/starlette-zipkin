@@ -6,3 +6,5 @@ build/*
 .env
 build/*
 __pycache__
+.coverage
+coverage.xml
