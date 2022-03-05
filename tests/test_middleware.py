@@ -86,18 +86,6 @@ async def test_dispatch_trace_buggy_headers(app, dummy_request, next_response):
     assert trace_id != resp.headers["x-b3-spanid"]
     await middleware.tracer.close()
 
-@pytest.mark.asyncio
-async def test_dispatch_trace_reuse_tracer(app, dummy_request, next_response):
-    config = ZipkinConfig()
-    middleware = ZipkinMiddleware(app, config=config)
-    # the tracer is initialized on the first dispatch
-    assert middleware.tracer is None
-    await middleware.dispatch(dummy_request(), next_response)
-    assert middleware.tracer is not None
-    tracer = middleware.tracer
-    await middleware.dispatch(dummy_request(), next_response)
-    assert middleware.tracer is tracer, "Tracer must be reused on every requests"
-
 
 @pytest.mark.asyncio
 async def test_dispatch_trace_reuse_tracer(app, dummy_request, next_response):
@@ -110,3 +98,76 @@ async def test_dispatch_trace_reuse_tracer(app, dummy_request, next_response):
     tracer = middleware.tracer
     await middleware.dispatch(dummy_request(), next_response)
     assert middleware.tracer is tracer, "Tracer must be reused on every requests"
+    await tracer.close()
+
+
+@pytest.mark.parametrize(
+    "params",
+    [
+        {"headers": [(b"a", b"A, B")]},
+        {"headers": [(b"a", b"A"), (b"a", b"B")]},
+    ],
+)
+def test_get_headers(app, params):
+    config = ZipkinConfig()
+    middleware = ZipkinMiddleware(app, config=config)
+    headers = middleware.get_headers({"headers": params["headers"]})
+    assert headers == '{"a": "A, B"}'
+
+
+@pytest.mark.parametrize(
+    "params",
+    [
+        {
+            "querystring": b"",
+            "expected": "",
+        },
+        {
+            "querystring": b"a=A&b=B",
+            "expected": "a=A&b=B",
+        },
+        {
+            "querystring": b"a=A&a=a",
+            "expected": "a=A&a=a",
+        },
+        {
+            "querystring": b"a=A%20a",
+            "expected": "a=A a",
+        },
+    ],
+)
+def test_get_query(app, params):
+    config = ZipkinConfig()
+    middleware = ZipkinMiddleware(app, config=config)
+    querystring = middleware.get_query({"query_string": params["querystring"]})
+    assert querystring == params["expected"]
+
+
+class DummyEndpoint:
+    def __init__(self, qualname, name):
+        self.__qualname__ = qualname
+        self.__name__ = name
+
+
+@pytest.mark.parametrize(
+    "params",
+    [
+        {
+            "endpoint": "",
+            "expected": "",
+        },
+        {
+            "endpoint": DummyEndpoint("qualname", "name"),
+            "expected": "test_middleware.qualname",
+        },
+        {
+            "endpoint": DummyEndpoint(None, "name"),
+            "expected": "test_middleware.name",
+        },
+    ],
+)
+def test_get_transaction(app, params):
+    config = ZipkinConfig()
+    middleware = ZipkinMiddleware(app, config=config)
+    transac = middleware.get_transaction({"endpoint": params["endpoint"]})
+    assert transac == params["expected"]
