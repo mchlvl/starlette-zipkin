@@ -2,6 +2,14 @@
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+
+## 0.2.2 (March 5, 2022)
+
+### Fixed
+- [PR31](https://github.com/mchlvl/starlette-zipkin/pull/31) test tracer fixed via dependency injection
+
+
+
 ## 0.2.1 (March 5, 2022)
 
 ### Changed
