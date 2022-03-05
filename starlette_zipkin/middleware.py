@@ -20,13 +20,17 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
     tracer: az.Tracer
 
     def __init__(
-        self, app: Starlette, dispatch: Callable = None, config: ZipkinConfig = None
+        self,
+        app: Starlette,
+        dispatch: Callable = None,
+        config: ZipkinConfig = None,
+        _tracer: az.Tracer = None,  # dependency injection used for testing
     ):
         self.app = app
         self.dispatch_func = self.dispatch if dispatch is None else dispatch
         self.config = config or ZipkinConfig()
         self.validate_config()
-        self.tracer = None  # Initialized on first dispatch
+        self.tracer = _tracer  # Initialized on first dispatch
 
     async def dispatch(
         self, request: Request, call_next: RequestResponseEndpoint

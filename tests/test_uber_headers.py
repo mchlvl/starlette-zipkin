@@ -7,27 +7,27 @@ from starlette_zipkin import (
 )
 
 
-def test_sync(app, uber_keys):
+def test_sync(app, tracer, uber_keys):
     config = ZipkinConfig(header_formatter=Headers)
-    app.add_middleware(ZipkinMiddleware, config=config)
+    app.add_middleware(ZipkinMiddleware, config=config, _tracer=tracer)
     client = TestClient(app)
     response = client.get("/sync-message?foo=bar")
     assert response.status_code == 200
     assert all(key in response.headers for key in uber_keys)
 
 
-def test_async(app, uber_keys):
+def test_async(app, tracer, uber_keys):
     config = ZipkinConfig(header_formatter=Headers)
-    app.add_middleware(ZipkinMiddleware, config=config)
+    app.add_middleware(ZipkinMiddleware, config=config, _tracer=tracer)
     client = TestClient(app)
     response = client.get("/async-message?foo=bar")
     assert response.status_code == 200
     assert all(key in response.headers for key in uber_keys)
 
 
-def test_sync_request_data(app, uber_keys):
+def test_sync_request_data(app, tracer, uber_keys):
     config = ZipkinConfig(header_formatter=Headers)
-    app.add_middleware(ZipkinMiddleware, config=config)
+    app.add_middleware(ZipkinMiddleware, config=config, _tracer=tracer)
     client = TestClient(app)
     response = client.get("/sync-message?foo=bar")
     assert response.status_code == 200
@@ -51,9 +51,9 @@ def test_sync_request_data(app, uber_keys):
     assert span_id == parent_id2
 
 
-def test_async_request_data(app, uber_keys):
+def test_async_request_data(app, tracer, uber_keys):
     config = ZipkinConfig(header_formatter=Headers)
-    app.add_middleware(ZipkinMiddleware, config=config)
+    app.add_middleware(ZipkinMiddleware, config=config, _tracer=tracer)
     client = TestClient(app)
     response = client.get("/async-message?foo=bar")
     assert response.status_code == 200
@@ -78,9 +78,9 @@ def test_async_request_data(app, uber_keys):
 
 
 @pytest.mark.parametrize("split_char", [(":"), ("%3A")])
-def test_split_char(app, uber_keys, split_char):
+def test_split_char(app, tracer, uber_keys, split_char):
     config = ZipkinConfig(header_formatter=Headers, header_formatter_kwargs=dict(split_char=split_char))
-    app.add_middleware(ZipkinMiddleware, config=config)
+    app.add_middleware(ZipkinMiddleware, config=config, _tracer=tracer)
     client = TestClient(app)
     response = client.get("/sync-message?foo=bar")
     assert response.status_code == 200
