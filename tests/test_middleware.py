@@ -30,6 +30,7 @@ async def test_dispatch_trace_new_child(app, dummy_request, next_response):
         "x-b3-spanid": span_id,
         "x-b3-traceid": trace_id,
     }
+    await middleware.tracer.close()
 
 
 @pytest.mark.asyncio
@@ -54,6 +55,7 @@ async def test_dispatch_trace(app, dummy_request, next_response):
         "x-b3-spanid": resp.headers["x-b3-spanid"],
         "x-b3-traceid": resp.headers["x-b3-traceid"],
     }
+    await middleware.tracer.close()
 
 
 @pytest.mark.asyncio
@@ -82,7 +84,7 @@ async def test_dispatch_trace_buggy_headers(app, dummy_request, next_response):
     }
     # we cannot reuse the traceid if the span id was missing
     assert trace_id != resp.headers["x-b3-spanid"]
-
+    await middleware.tracer.close()
 
 @pytest.mark.asyncio
 async def test_dispatch_trace_reuse_tracer(app, dummy_request, next_response):
