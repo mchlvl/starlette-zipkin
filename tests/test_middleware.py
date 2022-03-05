@@ -34,7 +34,7 @@ async def test_dispatch_trace_new_child(app, dummy_request, next_response):
 
 @pytest.mark.asyncio
 async def test_dispatch_trace(app, dummy_request, next_response):
-    config = ZipkinConfig("zipkin.host")
+    config = ZipkinConfig()
     middleware = ZipkinMiddleware(app, config=config)
     # the tracer is initialized on the first dispatch
     assert middleware.tracer is None
@@ -46,7 +46,7 @@ async def test_dispatch_trace(app, dummy_request, next_response):
     assert middleware.tracer._transport is not None
     assert (
         str(middleware.tracer._transport._address)
-        == "http://zipkin.host:9411/api/v2/spans"
+        == "http://localhost:9411/api/v2/spans"
     )
     assert dict(resp.headers) == {
         "x-b3-flags": "0",
@@ -59,7 +59,7 @@ async def test_dispatch_trace(app, dummy_request, next_response):
 @pytest.mark.asyncio
 async def test_dispatch_trace_buggy_headers(app, dummy_request, next_response):
     trace_id = "6223635aa7bfb6597d72ac7c4680bfed"
-    config = ZipkinConfig("zipkin.host")
+    config = ZipkinConfig()
     middleware = ZipkinMiddleware(app, config=config)
     # the tracer is initialized on the first dispatch
     assert middleware.tracer is None
@@ -74,10 +74,6 @@ async def test_dispatch_trace_buggy_headers(app, dummy_request, next_response):
     )
     assert middleware.tracer is not None
     assert middleware.tracer._transport is not None
-    assert (
-        str(middleware.tracer._transport._address)
-        == "http://zipkin.host:9411/api/v2/spans"
-    )
     assert dict(resp.headers) == {
         "x-b3-flags": "0",
         "x-b3-sampled": "1",
