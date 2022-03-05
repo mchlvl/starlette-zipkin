@@ -1,5 +1,7 @@
 from starlette.testclient import TestClient
-from starlette_zipkin import ZipkinMiddleware, ZipkinConfig, B3Headers as Headers
+
+from starlette_zipkin import B3Headers as Headers
+from starlette_zipkin import ZipkinConfig, ZipkinMiddleware
 
 
 def test_sync(app, tracer, b3_keys):
@@ -37,8 +39,7 @@ def test_sync_request_data(app, tracer, b3_keys):
     assert all(key in response2.headers for key in b3_keys)
     assert "x-b3-parentspanid" in response2.headers
     assert (
-        headers[Headers.TRACE_ID_HEADER]
-        == response2.headers[Headers.TRACE_ID_HEADER]
+        headers[Headers.TRACE_ID_HEADER] == response2.headers[Headers.TRACE_ID_HEADER]
     )
     assert headers["x-b3-spanid"] == response2.headers["x-b3-parentspanid"]
 
@@ -60,7 +61,6 @@ def test_async_request_data(app, tracer, b3_keys):
     assert all(key in response2.headers for key in b3_keys)
     assert "x-b3-parentspanid" in response2.headers
     assert (
-        headers[Headers.TRACE_ID_HEADER]
-        == response2.headers[Headers.TRACE_ID_HEADER]
+        headers[Headers.TRACE_ID_HEADER] == response2.headers[Headers.TRACE_ID_HEADER]
     )
     assert headers["x-b3-spanid"] == response2.headers["x-b3-parentspanid"]

@@ -1,5 +1,6 @@
 from starlette.testclient import TestClient
-from starlette_zipkin import ZipkinMiddleware, ZipkinConfig
+
+from starlette_zipkin import ZipkinConfig, ZipkinMiddleware
 
 
 def test_sync_no_inject(app, tracer, b3_keys):

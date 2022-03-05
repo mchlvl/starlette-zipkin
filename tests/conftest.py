@@ -1,14 +1,12 @@
-import pytest
-
 import aiozipkin as az
+import pytest
 from aiozipkin.transport import TransportABC
-
 from starlette.applications import Starlette
-from starlette.responses import PlainTextResponse
+from starlette.requests import Request
+from starlette.responses import PlainTextResponse, Response
+
 from starlette_zipkin import B3Headers, UberHeaders
 from starlette_zipkin.trace import _tracer_ctx_var, install_root_span, reset_root_span
-from starlette.requests import Request
-from starlette.responses import Response
 
 
 @pytest.fixture
@@ -85,7 +83,7 @@ class DummyRequest:
         self.body = body
         self.headers = headers or {}
         scpoped_headers = [
-           (k.lower().encode("latin-1"), v.encode("latin-1"))
+            (k.lower().encode("latin-1"), v.encode("latin-1"))
             for k, v in self.headers.items()
         ]
         self.scope = {
