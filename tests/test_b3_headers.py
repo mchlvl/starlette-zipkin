@@ -2,27 +2,27 @@ from starlette.testclient import TestClient
 from starlette_zipkin import ZipkinMiddleware, ZipkinConfig, B3Headers as Headers
 
 
-def test_sync(app, b3_keys):
+def test_sync(app, tracer, b3_keys):
     config = ZipkinConfig(header_formatter=Headers)
-    app.add_middleware(ZipkinMiddleware, config=config)
+    app.add_middleware(ZipkinMiddleware, config=config, _tracer=tracer)
     client = TestClient(app)
     response = client.get("/sync-message?foo=bar")
     assert response.status_code == 200
     assert all(key in response.headers for key in b3_keys)
 
 
-def test_async(app, b3_keys):
+def test_async(app, tracer, b3_keys):
     config = ZipkinConfig(header_formatter=Headers)
-    app.add_middleware(ZipkinMiddleware, config=config)
+    app.add_middleware(ZipkinMiddleware, config=config, _tracer=tracer)
     client = TestClient(app)
     response = client.get("/async-message?foo=bar")
     assert response.status_code == 200
     assert all(key in response.headers for key in b3_keys)
 
 
-def test_sync_request_data(app, b3_keys):
+def test_sync_request_data(app, tracer, b3_keys):
     config = ZipkinConfig(header_formatter=Headers)
-    app.add_middleware(ZipkinMiddleware, config=config)
+    app.add_middleware(ZipkinMiddleware, config=config, _tracer=tracer)
     client = TestClient(app)
     response = client.get("/sync-message?foo=bar")
     assert response.status_code == 200
@@ -43,9 +43,9 @@ def test_sync_request_data(app, b3_keys):
     assert headers["x-b3-spanid"] == response2.headers["x-b3-parentspanid"]
 
 
-def test_async_request_data(app, b3_keys):
+def test_async_request_data(app, tracer, b3_keys):
     config = ZipkinConfig(header_formatter=Headers)
-    app.add_middleware(ZipkinMiddleware, config=config)
+    app.add_middleware(ZipkinMiddleware, config=config, _tracer=tracer)
     client = TestClient(app)
     response = client.get("/async-message?foo=bar")
     assert response.status_code == 200
