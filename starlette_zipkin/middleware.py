@@ -39,13 +39,13 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
             self.tracer = await self.init_tracer()
 
         tracer_token = install_tracer(self.tracer)
-
+        kw = {}
+        function = self.tracer.new_trace
         if self.has_trace_id(request) and not self.config.force_new_trace:
-            kw = {"context": self.config.header_formatter.make_context(request.headers)}
-            function = self.tracer.new_child
-        else:
-            kw = {}
-            function = self.tracer.new_trace
+            context = self.config.header_formatter.make_context(request.headers)
+            if context:
+                kw = {"context": context}
+                function = self.tracer.new_child
 
         with function(**kw) as span:
             # set root span using context variable

@@ -1,10 +1,8 @@
 import pytest
 from starlette.testclient import TestClient
-from starlette_zipkin import (
-    ZipkinMiddleware,
-    ZipkinConfig,
-    UberHeaders as Headers,
-)
+
+from starlette_zipkin import UberHeaders as Headers
+from starlette_zipkin import ZipkinConfig, ZipkinMiddleware
 
 
 def test_sync(app, tracer, uber_keys):
@@ -79,11 +77,13 @@ def test_async_request_data(app, tracer, uber_keys):
 
 @pytest.mark.parametrize("split_char", [(":"), ("%3A")])
 def test_split_char(app, tracer, uber_keys, split_char):
-    config = ZipkinConfig(header_formatter=Headers, header_formatter_kwargs=dict(split_char=split_char))
+    config = ZipkinConfig(
+        header_formatter=Headers, header_formatter_kwargs=dict(split_char=split_char)
+    )
     app.add_middleware(ZipkinMiddleware, config=config, _tracer=tracer)
     client = TestClient(app)
     response = client.get("/sync-message?foo=bar")
     assert response.status_code == 200
     assert all(key in response.headers for key in uber_keys)
-    item = response.headers.get('uber-trace-id')
+    item = response.headers.get("uber-trace-id")
     assert split_char in item

@@ -1,10 +1,10 @@
-import pytest
-
 import aiozipkin as az
+import pytest
 from aiozipkin.transport import TransportABC
-
 from starlette.applications import Starlette
-from starlette.responses import PlainTextResponse
+from starlette.requests import Request
+from starlette.responses import PlainTextResponse, Response
+
 from starlette_zipkin import B3Headers, UberHeaders
 from starlette_zipkin.trace import _tracer_ctx_var, install_root_span, reset_root_span
 
@@ -67,3 +67,44 @@ def root_span(tracer):
     tok = install_root_span(span)
     yield span
     reset_root_span(tok)
+
+
+class DummyRequest:
+    def __init__(
+        self,
+        method="GET",
+        scheme="http",
+        path="/",
+        querystring=b"",
+        body=None,
+        headers=None,
+        type_="http",
+    ) -> None:
+        self.body = body
+        self.headers = headers or {}
+        scpoped_headers = [
+            (k.lower().encode("latin-1"), v.encode("latin-1"))
+            for k, v in self.headers.items()
+        ]
+        self.scope = {
+            "type": type_,
+            "scheme": scheme,
+            "method": method,
+            "path": path,
+            "query_string": querystring,
+            "headers": scpoped_headers,
+            "server": ["localhost", 8000],
+        }
+
+
+@pytest.fixture
+def dummy_request():
+    return DummyRequest
+
+
+@pytest.fixture
+def next_response():
+    async def next(request: Request) -> Response:
+        return Response(request.body, headers=dict(request.headers))
+
+    return next
