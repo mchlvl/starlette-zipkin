@@ -183,5 +183,9 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
 
 
 def get_ip() -> Any:
-    hostname = socket.gethostname()
-    return socket.gethostbyname(hostname)
+    try:
+        hostname = socket.gethostname()
+        return socket.gethostbyname(hostname)
+    except socket.gaierror:
+        return socket.gethostbyname("")
+
