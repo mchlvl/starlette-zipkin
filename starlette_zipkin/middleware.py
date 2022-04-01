@@ -188,4 +188,3 @@ def get_ip() -> Any:
         return socket.gethostbyname(hostname)
     except socket.gaierror:
         return socket.gethostbyname("")
-

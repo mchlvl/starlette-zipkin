@@ -1,6 +1,6 @@
 import pytest
 
-from starlette_zipkin import ZipkinConfig, ZipkinMiddleware
+from starlette_zipkin import ZipkinConfig, ZipkinMiddleware, middleware
 
 
 @pytest.mark.asyncio
@@ -171,3 +171,11 @@ def test_get_transaction(app, params):
     middleware = ZipkinMiddleware(app, config=config)
     transac = middleware.get_transaction({"endpoint": params["endpoint"]})
     assert transac == params["expected"]
+
+def test_get_ip_with_hostname_that_resolves(monkeypatch):
+    monkeypatch.setattr(middleware.socket, "gethostname", lambda: "localhost")
+    assert middleware.get_ip() == "127.0.0.1"
+
+def test_get_ip_without_hostname_that_resolves(monkeypatch):
+    monkeypatch.setattr(middleware.socket, "gethostname", lambda: "thishostnamewontresolve")
+    assert middleware.get_ip() == "0.0.0.0"
