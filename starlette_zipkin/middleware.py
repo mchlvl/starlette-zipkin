@@ -31,6 +31,7 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
         self.config = config or ZipkinConfig()
         self.validate_config()
         self.tracer = _tracer  # Initialized on first dispatch
+        self.host_ip = get_ip()
 
     async def dispatch(
         self, request: Request, call_next: RequestResponseEndpoint
@@ -88,7 +89,7 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
         name = f'{scope["scheme"].upper()} {scope["method"]} {scope["path"]}'
         span.name(name)
         span.tag("component", "asgi")
-        span.tag("ip", get_ip())
+        span.tag("ip", self.host_ip)
         span.kind(az.SERVER)
 
         if scope["type"] in {"http", "websocket"}:
