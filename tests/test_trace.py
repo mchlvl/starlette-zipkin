@@ -171,7 +171,6 @@ def test_headers(root_span):
 
 def test_trace_without_middleware():
     """Test the code passes through without the instrumenting middleware"""
-    dummy_trace = None
     with trace("my dummy trace") as span:
         span.annotate("dummy annotation")
         span.tag("key", "value")
@@ -186,7 +185,6 @@ def test_trace_without_middleware():
 @pytest.mark.asyncio
 async def test_trace_without_middleware_async():
     """Test the code passes through without the instrumenting middleware"""
-    dummy_trace = None
     async with trace("my dummy trace") as span:
         span.annotate("dummy annotation")
         span.tag("key", "value")
