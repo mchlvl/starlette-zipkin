@@ -2,10 +2,14 @@
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 0.2.4 (July 5, 2022)
+
+### Changed
+- [PR36](https://github.com/mchlvl/starlette-zipkin/pull/36) application can operate when middleware is not added (trace decorator and related methods pass through silently)
 
 ## 0.2.3 (April 1, 2022)
 
-## Fixed
+### Fixed
 - [PR33](https://github.com/mchlvl/starlette-zipkin/pull/33) updates test setup
 - [PR34](https://github.com/mchlvl/starlette-zipkin/pull/34) handles edge case when ip cannot be resolved
 
