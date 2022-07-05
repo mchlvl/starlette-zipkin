@@ -167,3 +167,30 @@ def test_headers(root_span):
             "X-B3-SpanId": child_span._span.context.span_id,
             "X-B3-TraceId": child_span.trace_id,
         }
+
+
+def test_trace_without_middleware():
+    """Test the code passes through without the instrumenting middleware"""
+    with trace("my dummy trace") as span:
+        span.annotate("dummy annotation")
+        span.tag("key", "value")
+        trace_id = span.trace_id
+        headers = span.make_headers()
+        dummy_trace = _cur_span_ctx_var.get()
+    assert dummy_trace is None
+    assert trace_id is None
+    assert headers == {}
+
+
+@pytest.mark.asyncio
+async def test_trace_without_middleware_async():
+    """Test the code passes through without the instrumenting middleware"""
+    async with trace("my dummy trace") as span:
+        span.annotate("dummy annotation")
+        span.tag("key", "value")
+        trace_id = span.trace_id
+        headers = span.make_headers()
+        dummy_trace = _cur_span_ctx_var.get()
+    assert dummy_trace is None
+    assert trace_id is None
+    assert headers == {}

@@ -49,6 +49,7 @@ class trace:
         self._name = name
         self._kind = kind
         self._span: Optional[SpanAbc] = None
+        self.__is_context_manager: bool = False
 
     @classmethod
     def make_headers(cls) -> Dict[str, str]:
@@ -84,20 +85,27 @@ class trace:
 
     def tag(self, key: str, value: str) -> "trace":
         """Add a tag to the current trace span."""
-        if self._span is None:
+        if not self.__is_context_manager:
             raise RuntimeError(f"{self} used outside the context manager")
+        if self._span is None:
+            return self
         self._span.tag(key, value)
         return self
 
     def annotate(self, value: Optional[str], ts: Optional[float] = None) -> "trace":
         """Add an annotation to the current trace span."""
-        if self._span is None:
+        if not self.__is_context_manager:
             raise RuntimeError(f"{self} used outside the context manager")
+        if self._span is None:
+            return self
         self._span.annotate(value, ts)
         return self
 
     def __enter__(self) -> "trace":
+        self.__is_context_manager = True
         tracer = get_tracer()
+        if tracer is None:
+            return self
         parent = _cur_span_ctx_var.get()
         if parent is None:
             parent = get_root_span()
@@ -109,8 +117,8 @@ class trace:
         return self
 
     def __exit__(self, *exc: Any) -> None:
-        _cur_span_ctx_var.reset(self._tok)
         if self._span:
+            _cur_span_ctx_var.reset(self._tok)
             self._span.__exit__(*exc)
 
     async def __aenter__(self) -> "trace":
