@@ -22,14 +22,9 @@ async def test_dispatch_trace_new_child(app, dummy_request, next_response):
     )
     assert middleware.tracer is not None
     assert middleware.tracer._transport is not None
-    assert (
-        str(middleware.tracer._transport._address)
-        == "http://zipkin.host:9411/api/v2/spans"
-    )
-    assert dict(resp.headers) == {
-        "x-b3-spanid": span_id,
-        "x-b3-traceid": trace_id,
-    }
+    assert str(middleware.tracer._transport._address) == "http://zipkin.host:9411/api/v2/spans"
+    assert resp.headers["x-b3-spanid"] == span_id
+    assert resp.headers["x-b3-traceid"] == trace_id
     await middleware.tracer.close()
 
 
@@ -45,16 +40,11 @@ async def test_dispatch_trace(app, dummy_request, next_response):
     )
     assert middleware.tracer is not None
     assert middleware.tracer._transport is not None
-    assert (
-        str(middleware.tracer._transport._address)
-        == "http://localhost:9411/api/v2/spans"
-    )
-    assert dict(resp.headers) == {
-        "x-b3-flags": "0",
-        "x-b3-sampled": "1",
-        "x-b3-spanid": resp.headers["x-b3-spanid"],
-        "x-b3-traceid": resp.headers["x-b3-traceid"],
-    }
+    assert str(middleware.tracer._transport._address) == "http://localhost:9411/api/v2/spans"
+    assert resp.headers["x-b3-flags"] == "0"
+    assert resp.headers["x-b3-sampled"] == "1"
+    assert resp.headers["x-b3-spanid"] == resp.headers["x-b3-spanid"]
+    assert resp.headers["x-b3-traceid"] == resp.headers["x-b3-traceid"]
     await middleware.tracer.close()
 
 
@@ -76,12 +66,10 @@ async def test_dispatch_trace_buggy_headers(app, dummy_request, next_response):
     )
     assert middleware.tracer is not None
     assert middleware.tracer._transport is not None
-    assert dict(resp.headers) == {
-        "x-b3-flags": "0",
-        "x-b3-sampled": "1",
-        "x-b3-spanid": resp.headers["x-b3-spanid"],
-        "x-b3-traceid": resp.headers["x-b3-traceid"],
-    }
+    assert resp.headers["x-b3-flags"] == "0"
+    assert resp.headers["x-b3-sampled"] == "1"
+    assert resp.headers["x-b3-spanid"] == resp.headers["x-b3-spanid"]
+    assert resp.headers["x-b3-traceid"] == resp.headers["x-b3-traceid"]
     # we cannot reuse the traceid if the span id was missing
     assert trace_id != resp.headers["x-b3-spanid"]
     await middleware.tracer.close()
@@ -172,9 +160,11 @@ def test_get_transaction(app, params):
     transac = middleware.get_transaction({"endpoint": params["endpoint"]})
     assert transac == params["expected"]
 
+
 def test_get_ip_with_hostname_that_resolves(monkeypatch):
     monkeypatch.setattr(middleware.socket, "gethostname", lambda: "localhost")
     assert middleware.get_ip() == "127.0.0.1"
+
 
 def test_get_ip_without_hostname_that_resolves(monkeypatch):
     monkeypatch.setattr(middleware.socket, "gethostname", lambda: "thishostnamewontresolve")

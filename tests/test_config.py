@@ -1,6 +1,12 @@
+import pytest
 from starlette.testclient import TestClient
 
 from starlette_zipkin import ZipkinConfig, ZipkinMiddleware
+
+
+def test_config_instance(app, tracer):
+    with pytest.raises(ValueError):
+        app.add_middleware(ZipkinMiddleware, config=TestClient, _tracer=tracer)
 
 
 def test_sync_no_inject(app, tracer, b3_keys):
