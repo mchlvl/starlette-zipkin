@@ -2,6 +2,12 @@
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 0.3.0 (Sept 8, 2022)
+
+### Changed
+- [PR40](https://github.com/mchlvl/starlette-zipkin/pull/40) Upgrade starlette dependency to the latest version
+- [PR39](https://github.com/mchlvl/starlette-zipkin/pull/39) Explicitly instantiate ZipkinMiddleware's parent - will default to 0.20.4 if not locked
+
 ## 0.2.4 (July 5, 2022)
 
 ### Changed
