@@ -45,8 +45,8 @@ setup(
     author_email="mic.vala@gmail.com",
     packages=get_packages("starlette_zipkin"),
     install_requires=[
-        'aiozipkin <2',
-        'starlette >0.14,<21',
+        "aiozipkin <2",
+        "starlette >0.14,<21",
     ],
     classifiers=[
         "Development Status :: 3 - Alpha",
