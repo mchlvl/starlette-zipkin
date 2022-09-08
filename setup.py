@@ -46,7 +46,7 @@ setup(
     packages=get_packages("starlette_zipkin"),
     install_requires=[
         'aiozipkin <2',
-        'starlette >0.14,<18',
+        'starlette >0.14,<21',
     ],
     classifiers=[
         "Development Status :: 3 - Alpha",
