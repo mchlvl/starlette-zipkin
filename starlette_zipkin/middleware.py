@@ -26,8 +26,7 @@ class ZipkinMiddleware(BaseHTTPMiddleware):
         config: ZipkinConfig = None,
         _tracer: az.Tracer = None,  # dependency injection used for testing
     ):
-        self.app = app
-        self.dispatch_func = self.dispatch if dispatch is None else dispatch
+        super().__init__(app=app, dispatch=dispatch)
         self.config = config or ZipkinConfig()
         self.validate_config()
         self.tracer = _tracer  # Initialized on first dispatch
