@@ -15,7 +15,7 @@ pytest-asyncio = "==0.16.0"
 
 [packages]
 aiozipkin = "==1.0.0"
-starlette = "==0.20.4"
+starlette = "==0.25.0"
 
 [pipenv]
 allow_prereleases = false
