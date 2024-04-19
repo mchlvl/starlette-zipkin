@@ -36,7 +36,7 @@ def get_packages(package):
 setup(
     name="starlette-zipkin",
     version=get_version("starlette_zipkin"),
-    url="https://github.com/mchlvl/starlette_zipkin",
+    url="https://github.com/mchlvl/starlette-zipkin",
     license="BSD",
     description="Zipkin integration for ASGI frameworks.",
     long_description=get_long_description(),
